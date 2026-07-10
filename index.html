@@ -497,6 +497,513 @@ main {
   .brand-name { font-size: 15px; }
   .brand-addr { font-size: 9px; }
 }
+
+/* ============================================================
+   ★ M3 商品詳情頁 + 購物車 bottom sheet
+   ============================================================ */
+
+/* ===== 頁面切換 ===== */
+.page-list.hidden { display: none; }
+.detail-page { display: none; max-width: 1280px; margin: 0 auto; padding: 20px 16px 40px; }
+.detail-page.active { display: block; }
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 12px;
+  background: var(--cream-3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--wood);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 18px;
+  transition: all .2s;
+  font-family: inherit;
+}
+.detail-back:hover { background: var(--apricot-soft); border-color: var(--apricot); }
+
+/* ===== 詳情頁 layout ===== */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media (min-width: 768px) {
+  .detail-layout { grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+}
+@media (min-width: 1024px) {
+  .detail-layout { grid-template-columns: 1.1fr 1fr; }
+}
+
+/* ===== 詳情頁圖片 ===== */
+.detail-images { display: flex; flex-direction: column; gap: 10px; }
+
+.detail-main-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--cream-2);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+.detail-main-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.detail-sold-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(200, 135, 112, 0.95);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 12px;
+  letter-spacing: 1.5px;
+  z-index: 2;
+}
+
+.detail-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.detail-thumbs::-webkit-scrollbar { display: none; }
+
+.detail-thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: var(--cream-2);
+  transition: all .15s;
+  padding: 0;
+}
+.detail-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.detail-thumb:hover { border-color: var(--apricot-soft); }
+.detail-thumb.active { border-color: var(--apricot-deep); }
+
+/* ===== 詳情頁資訊 ===== */
+.detail-info { display: flex; flex-direction: column; gap: 18px; }
+
+.detail-cat {
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.detail-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}
+.detail-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--wood);
+  letter-spacing: 0.5px;
+}
+.detail-price .currency { font-size: 14px; margin-right: 2px; opacity: 0.7; font-weight: 600; }
+
+.variant-section {
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.variant-label {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.variant-label .picked {
+  color: var(--wood);
+  font-weight: 700;
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.variant-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 顏色 chip */
+.color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  background: var(--cream-3);
+  cursor: pointer;
+  transition: all .18s;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+.color-chip:hover { border-color: var(--apricot); }
+.color-chip.selected {
+  border-color: var(--wood);
+  background: var(--wood);
+  color: var(--cream);
+  font-weight: 600;
+}
+.color-chip .swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(139, 111, 71, 0.2);
+  flex-shrink: 0;
+}
+
+/* 尺寸 chip */
+.size-chip {
+  min-width: 44px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  background: var(--cream-3);
+  cursor: pointer;
+  transition: all .18s;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-align: center;
+}
+.size-chip:hover { border-color: var(--apricot); }
+.size-chip.selected {
+  border-color: var(--wood);
+  background: var(--wood);
+  color: var(--cream);
+}
+
+.variant-empty {
+  font-size: 12px;
+  color: var(--text-mute);
+  padding: 6px 0;
+}
+
+/* 數量選擇器 */
+.qty-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.qty-selector {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--cream-3);
+}
+.qty-btn {
+  width: 38px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: var(--wood);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+}
+.qty-btn:hover { background: var(--apricot-soft); }
+.qty-btn:disabled { color: var(--text-mute); cursor: not-allowed; opacity: 0.4; }
+.qty-input {
+  width: 46px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qty-stock {
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.3px;
+}
+
+.add-to-cart-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 26px;
+  background: var(--wood);
+  color: var(--cream);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+  box-shadow: 0 4px 14px rgba(139, 111, 71, 0.25);
+}
+.add-to-cart-btn:hover:not(:disabled) { background: var(--apricot-deep); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 151, 104, 0.35); }
+.add-to-cart-btn:active { transform: translateY(0); }
+.add-to-cart-btn:disabled {
+  background: var(--text-mute);
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* ===== BOTTOM SHEET (購物車) ===== */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 63, 53, 0.4);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: var(--cream);
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  box-shadow: 0 -8px 40px rgba(74, 63, 53, 0.18);
+  padding-bottom: var(--safe-bottom);
+}
+.sheet.open { transform: translateY(0); }
+
+@media (min-width: 640px) {
+  .sheet {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    width: 460px;
+    transform: translateX(-50%) translateY(calc(100% + 24px));
+    border-radius: 20px;
+    max-height: 80vh;
+  }
+  .sheet.open { transform: translateX(-50%) translateY(0); }
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+@media (min-width: 640px) { .sheet-handle { display: none; } }
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--wood);
+  letter-spacing: 1px;
+}
+.sheet-title .count { color: var(--apricot-deep); margin-left: 4px; }
+.sheet-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--wood);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sheet-close:hover { background: var(--apricot-soft); }
+
+.sheet-body {
+  overflow-y: auto;
+  padding: 12px 20px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 40px 20px 30px;
+  color: var(--text-mute);
+}
+.cart-empty .icon { font-size: 42px; margin-bottom: 10px; opacity: 0.5; }
+.cart-empty p { font-size: 13px; }
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.cart-item:last-child { border-bottom: none; }
+
+.cart-item-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--cream-2);
+  flex-shrink: 0;
+}
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cart-item-placeholder { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--text-mute); font-size: 24px; }
+
+.cart-item-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cart-item-name {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cart-item-variant {
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.3px;
+}
+.cart-item-price {
+  font-size: 13px;
+  color: var(--wood);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.cart-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.cart-item-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-mute);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color .15s;
+}
+.cart-item-remove:hover { color: var(--sold); }
+
+.cart-item-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--cream-3);
+}
+.cart-qty-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--wood);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cart-qty-btn:hover { background: var(--apricot-soft); }
+.cart-qty-num {
+  min-width: 22px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sheet-footer {
+  padding: 14px 20px calc(14px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--cream-3);
+  flex-shrink: 0;
+}
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.cart-total-label { font-size: 13px; color: var(--text-soft); letter-spacing: 0.5px; }
+.cart-total-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--wood);
+  letter-spacing: 0.5px;
+}
+.cart-total-amount .currency { font-size: 13px; margin-right: 2px; opacity: 0.7; font-weight: 600; }
+
+.checkout-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 24px;
+  background: var(--apricot-deep);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+  box-shadow: 0 4px 14px rgba(212, 151, 104, 0.3);
+}
+.checkout-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 151, 104, 0.4); }
+.checkout-btn:disabled { background: var(--text-mute); cursor: not-allowed; box-shadow: none; opacity: 0.5; }
+
+/* 手機微調詳情頁 */
+@media (max-width: 480px) {
+  .detail-name { font-size: 19px; }
+  .detail-price { font-size: 24px; }
+  .add-to-cart-btn { padding: 13px 18px; font-size: 14px; }
+}
+
 </style>
 </head>
 <body>
@@ -532,14 +1039,35 @@ main {
 
 <!-- ===== MAIN ===== -->
 <main>
-  <div class="result-count" id="resultCount"></div>
-  <div id="productArea">
-    <div class="loading">
-      <div class="spinner"></div>
-      <div>載入中...</div>
+  <div class="page-list" id="pageList">
+    <div class="result-count" id="resultCount"></div>
+    <div id="productArea">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>載入中...</div>
+      </div>
     </div>
   </div>
+  <section class="detail-page" id="detailPage"></section>
 </main>
+
+<!-- ===== 購物車 BOTTOM SHEET ===== -->
+<div class="sheet-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
+<aside class="sheet" id="cartSheet" role="dialog" aria-label="購物車" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <header class="sheet-header">
+    <div class="sheet-title">🛒 購物車<span class="count" id="cartTitleCount"></span></div>
+    <button class="sheet-close" onclick="closeCart()" aria-label="關閉">✕</button>
+  </header>
+  <div class="sheet-body" id="cartBody"></div>
+  <footer class="sheet-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">小計</span>
+      <span class="cart-total-amount"><span class="currency">NT$</span><span id="cartTotalAmount">0</span></span>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="goCheckout()">前往結帳</button>
+  </footer>
+</aside>
 
 <!-- ===== FOOTER ===== -->
 <footer class="site-footer">
@@ -608,7 +1136,40 @@ const MOCK_PRODUCTS = [
 let allProducts = [];
 let currentCat = '全部';
 let currentSearch = '';
-let cart = []; // 預留給 M3
+let cart = []; // { key, productId, name, image, price, color, size, qty }
+let currentProduct = null; // 詳情頁當前商品
+let selectedColor = null;
+let selectedSize = null;
+let selectedImageIdx = 0;
+
+// ============================================================
+// ★ M3 中文顏色 → 色碼對照（顯示顏色圓點用）
+// ============================================================
+const COLOR_MAP = {
+  '白': '#FFFFFF', '米白': '#F5EFE4', '奶白': '#FAF3EB', '象牙': '#F3EAD3',
+  '黑': '#2B2621', '深黑': '#0F0D0B',
+  '灰': '#8E8579', '淺灰': '#B8B0A3', '深灰': '#5A544B', '煙灰': '#7F776D',
+  '藍': '#4A6FA5', '淺藍': '#A3B8D6', '深藍': '#2C4770', '牛仔藍': '#4A6285', '寶藍': '#2450A0',
+  '紅': '#C94D4D', '深紅': '#8B2E2E', '正紅': '#D63A3A', '磚紅': '#B85348',
+  '粉': '#E8B4B8', '淺粉': '#F2CFD4', '嫩粉': '#F5D5D5', '珊瑚粉': '#EFA69A', '玫瑰': '#D48090',
+  '綠': '#5A7A5A', '軍綠': '#5B6845', '橄欖': '#7A7248', '墨綠': '#3D4E3B', '抹茶': '#A2B487', '薄荷': '#B4D4C0',
+  '黃': '#E8C877', '芥末': '#C4A34B', '鵝黃': '#F0D97A', '奶油': '#F5E5B0',
+  '橘': '#E88A5A', '橙': '#E07A3E', '燒橘': '#C6683A',
+  '紫': '#8A6FA0', '淺紫': '#B8A5C4', '深紫': '#5D4770', '薰衣草': '#B5A5C7',
+  '棕': '#7A5A3A', '深棕': '#5A4028', '淺棕': '#A18868', '巧克力': '#4E3320',
+  '咖': '#6B4E3D', '咖啡': '#5D4230', '摩卡': '#7D5F48',
+  '杏': '#E8B587', '杏色': '#E8B587', '裸': '#E5C7A5', '裸粉': '#EDCEBB',
+  '米': '#EFE0C7', '米色': '#EFE0C7', '燕麥': '#D8CAAD', '奶茶': '#C8B291',
+  '卡其': '#B8A582', '駝': '#B08961', '駝色': '#B08961', '焦糖': '#A46D3D',
+  '金': '#C9A84C', '銀': '#C0C0C0',
+  '花': '#E8B587', // 花色 fallback
+};
+
+function getColorHex(name) {
+  if (!name) return '#E8B587';
+  if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name; // 已經是 hex
+  return COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')] || '#E8B587';
+}
 
 // ============================================================
 // 載入商品（先嘗試 Apps Script，失敗回退到 mock）
@@ -720,9 +1281,7 @@ function cardHtml(p) {
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
   const colorsHtml = (p.colors || []).slice(0, 5).map(c => {
-    // 若 c 是 #xxxxxx 顏色碼，直接用；否則用文字色 fallback
-    const isHex = /^#[0-9A-Fa-f]{3,8}$/.test(c);
-    return `<span class="color-dot" style="background:${isHex ? c : 'var(--apricot-soft)'}" title="${escapeAttr(c)}"></span>`;
+    return `<span class="color-dot" style="background:${getColorHex(c)}" title="${escapeAttr(c)}"></span>`;
   }).join('');
 
   return `
@@ -738,27 +1297,383 @@ function cardHtml(p) {
 }
 
 // ============================================================
-// 事件
+// ★ M3 事件：進入詳情頁 / 打開購物車
 // ============================================================
 function openProduct(id) {
-  toast('商品詳情頁即將推出（M3）');
-  // M3 會實作
+  location.hash = '#/product/' + encodeURIComponent(id);
 }
 
 function openCart() {
-  if (cart.length === 0) {
-    toast('購物車功能即將推出（M3）');
-  } else {
-    toast(`購物車有 ${cart.length} 件商品`);
-  }
+  document.getElementById('cartBackdrop').classList.add('open');
+  document.getElementById('cartSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderCart();
+}
+
+function closeCart() {
+  document.getElementById('cartBackdrop').classList.remove('open');
+  document.getElementById('cartSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function goCheckout() {
+  if (cart.length === 0) { toast('購物車還是空的喔'); return; }
+  toast('結帳流程即將推出（M4）🚧');
+  // M4 會實作結帳流程
 }
 
 function clearAllFilters() {
   currentCat = '全部';
   currentSearch = '';
   document.getElementById('searchInput').value = '';
+  location.hash = '';
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// ★ M3 Hash Routing
+// ============================================================
+function handleRoute() {
+  const hash = location.hash;
+  const listEl = document.getElementById('pageList');
+  const detailEl = document.getElementById('detailPage');
+
+  if (hash.startsWith('#/product/')) {
+    const id = decodeURIComponent(hash.substring('#/product/'.length));
+    const product = allProducts.find(p => p.id === id);
+    if (product && product.onlineShop === true) {
+      showDetail(product);
+      listEl.classList.add('hidden');
+      detailEl.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      // 找不到 → 回首頁
+      location.hash = '';
+      toast('商品已下架或不存在');
+    }
+  } else {
+    listEl.classList.remove('hidden');
+    detailEl.classList.remove('active');
+    detailEl.innerHTML = '';
+    currentProduct = null;
+  }
+}
+
+// ============================================================
+// ★ M3 商品詳情頁
+// ============================================================
+function showDetail(product) {
+  currentProduct = product;
+  selectedColor = null;
+  selectedSize = null;
+  selectedImageIdx = 0;
+
+  // 有貨的顏色（自動隱藏售完顏色）
+  const availableColors = getAvailableColors(product);
+  const availableSizes = getAvailableSizes(product, null);
+
+  // 自動選第一個有貨的顏色/尺寸
+  if (availableColors.length > 0) selectedColor = availableColors[0];
+  const sizesForSelectedColor = getAvailableSizes(product, selectedColor);
+  if (sizesForSelectedColor.length > 0) selectedSize = sizesForSelectedColor[0];
+
+  renderDetail();
+}
+
+function renderDetail() {
+  const p = currentProduct;
+  if (!p) return;
+
+  const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  const mainImg = images[selectedImageIdx];
+  const soldOutAll = (p.stock || 0) <= 0;
+
+  const availableColors = getAvailableColors(p);
+  const sizesForColor = getAvailableSizes(p, selectedColor);
+  const variantStock = getVariantStock(p, selectedColor, selectedSize);
+
+  const el = document.getElementById('detailPage');
+  el.innerHTML = `
+    <button class="detail-back" onclick="location.hash='';">
+      ← 返回商品列表
+    </button>
+    <div class="detail-layout">
+      <div class="detail-images">
+        <div class="detail-main-image">
+          ${soldOutAll ? '<div class="detail-sold-badge">SOLD OUT</div>' : ''}
+          ${mainImg
+            ? `<img src="${full(mainImg)}" alt="${escapeAttr(p.name)}" loading="eager">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;color:var(--text-mute);">👗</div>`
+          }
+        </div>
+        ${images.length > 1 ? `
+          <div class="detail-thumbs">
+            ${images.map((img, i) => `
+              <button class="detail-thumb ${i === selectedImageIdx ? 'active' : ''}" onclick="selectImage(${i})">
+                <img src="${thumb(img)}" alt="縮圖 ${i+1}" loading="lazy">
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+      <div class="detail-info">
+        ${p.cat ? `<div class="detail-cat">${escapeHtml(p.cat)}</div>` : ''}
+        <h1 class="detail-name">${escapeHtml(p.name || '')}</h1>
+        <div class="detail-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
+
+        ${availableColors.length > 0 ? `
+          <div class="variant-section">
+            <div class="variant-label">
+              <span>顏色</span>
+              <span class="picked">${selectedColor ? escapeHtml(selectedColor) : ''}</span>
+            </div>
+            <div class="variant-options">
+              ${availableColors.map(c => `
+                <button class="color-chip ${c === selectedColor ? 'selected' : ''}" onclick="selectColor('${escapeAttr(c)}')">
+                  <span class="swatch" style="background:${getColorHex(c)}"></span>${escapeHtml(c)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${sizesForColor.length > 0 ? `
+          <div class="variant-section">
+            <div class="variant-label">
+              <span>尺寸</span>
+              <span class="picked">${selectedSize ? escapeHtml(selectedSize) : ''}</span>
+            </div>
+            <div class="variant-options">
+              ${sizesForColor.map(s => `
+                <button class="size-chip ${s === selectedSize ? 'selected' : ''}" onclick="selectSize('${escapeAttr(s)}')">
+                  ${escapeHtml(s)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : (availableColors.length > 0 ? `<div class="variant-empty">此顏色暫無庫存</div>` : '')}
+
+        ${!soldOutAll ? `
+          <div class="qty-row">
+            <div class="qty-selector">
+              <button class="qty-btn" onclick="changeQty(-1)" id="qtyDec">−</button>
+              <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="${variantStock || 1}" onchange="onQtyInput(this)">
+              <button class="qty-btn" onclick="changeQty(1)" id="qtyInc">+</button>
+            </div>
+            <div class="qty-stock" id="stockHint">庫存 ${variantStock} 件</div>
+          </div>
+          <button class="add-to-cart-btn" id="addBtn" onclick="handleAddToCart()" ${(!selectedColor || !selectedSize || variantStock <= 0) ? 'disabled' : ''}>
+            ${(!selectedColor || !selectedSize) ? '請選擇規格' : (variantStock <= 0 ? '此規格售完' : '加入購物車 🛒')}
+          </button>
+        ` : `
+          <div style="padding:20px;background:var(--cream-2);border-radius:12px;text-align:center;color:var(--text-soft);font-size:13px;">
+            商品目前售完，歡迎透過 LINE 詢問補貨資訊
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// ★ M3 變體 & 庫存邏輯
+// ============================================================
+function getVariantStock(product, color, size) {
+  if (!product) return 0;
+  if (!product.stockMap) return product.stock || 0;
+  const key = `${color || ''}|${size || ''}`;
+  const n = product.stockMap[key];
+  return typeof n === 'number' ? n : 0;
+}
+
+function getAvailableColors(product) {
+  const colors = product.colors || [];
+  const sizes = product.sizes || ['F'];
+  if (!product.stockMap) {
+    return (product.stock || 0) > 0 ? colors : [];
+  }
+  return colors.filter(c => sizes.some(s => getVariantStock(product, c, s) > 0));
+}
+
+function getAvailableSizes(product, color) {
+  const sizes = product.sizes || [];
+  if (!product.stockMap) {
+    return (product.stock || 0) > 0 ? sizes : [];
+  }
+  if (color) {
+    return sizes.filter(s => getVariantStock(product, color, s) > 0);
+  }
+  const colors = product.colors || [];
+  return sizes.filter(s => colors.some(c => getVariantStock(product, c, s) > 0));
+}
+
+// ============================================================
+// ★ M3 詳情頁互動
+// ============================================================
+function selectImage(idx) {
+  selectedImageIdx = idx;
+  renderDetail();
+}
+
+function selectColor(color) {
+  selectedColor = color;
+  // 檢查目前選的 size 在新 color 下是否有貨
+  const availSizes = getAvailableSizes(currentProduct, color);
+  if (!availSizes.includes(selectedSize)) {
+    selectedSize = availSizes[0] || null;
+  }
+  renderDetail();
+}
+
+function selectSize(size) {
+  selectedSize = size;
+  renderDetail();
+}
+
+function changeQty(delta) {
+  const input = document.getElementById('qtyInput');
+  if (!input) return;
+  const stock = getVariantStock(currentProduct, selectedColor, selectedSize);
+  let n = parseInt(input.value, 10) || 1;
+  n = Math.max(1, Math.min(stock, n + delta));
+  input.value = n;
+}
+
+function onQtyInput(input) {
+  const stock = getVariantStock(currentProduct, selectedColor, selectedSize);
+  let n = parseInt(input.value, 10) || 1;
+  n = Math.max(1, Math.min(stock, n));
+  input.value = n;
+}
+
+function handleAddToCart() {
+  if (!currentProduct || !selectedColor || !selectedSize) return;
+  const stock = getVariantStock(currentProduct, selectedColor, selectedSize);
+  if (stock <= 0) { toast('此規格已售完'); return; }
+  const qty = parseInt(document.getElementById('qtyInput').value, 10) || 1;
+  addToCart(currentProduct, selectedColor, selectedSize, qty);
+}
+
+// ============================================================
+// ★ M3 購物車 CRUD
+// ============================================================
+const CART_KEY = 'wanwan_shop_cart';
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    cart = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(cart)) cart = [];
+  } catch (e) { cart = []; }
+  updateCartBadge();
+}
+
+function saveCart() {
+  try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
+  updateCartBadge();
+}
+
+function addToCart(product, color, size, qty) {
+  const key = `${product.id}|${color}|${size}`;
+  const stock = getVariantStock(product, color, size);
+  const existing = cart.find(item => item.key === key);
+  if (existing) {
+    existing.qty = Math.min(stock, existing.qty + qty);
+  } else {
+    cart.push({
+      key,
+      productId: product.id,
+      name: product.name,
+      image: (product.images && product.images[0]) || product.image || '',
+      price: product.price || 0,
+      color,
+      size,
+      qty: Math.min(stock, qty),
+    });
+  }
+  saveCart();
+  toast(`「${product.name}」已加入購物車 🛒`);
+  openCart();
+}
+
+function removeFromCart(key) {
+  cart = cart.filter(item => item.key !== key);
+  saveCart();
+  renderCart();
+}
+
+function cartChangeQty(key, delta) {
+  const item = cart.find(i => i.key === key);
+  if (!item) return;
+  const p = allProducts.find(x => x.id === item.productId);
+  const stock = p ? getVariantStock(p, item.color, item.size) : item.qty;
+  item.qty = Math.max(1, Math.min(stock, item.qty + delta));
+  saveCart();
+  renderCart();
+}
+
+function getCartTotal() {
+  return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+}
+
+function getCartCount() {
+  return cart.reduce((sum, item) => sum + item.qty, 0);
+}
+
+function updateCartBadge() {
+  const badge = document.getElementById('cartBadge');
+  const count = getCartCount();
+  badge.textContent = count > 0 ? count : '';
+  badge.setAttribute('data-count', count);
+}
+
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  const titleCount = document.getElementById('cartTitleCount');
+  const totalEl = document.getElementById('cartTotalAmount');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  const count = getCartCount();
+  titleCount.textContent = count > 0 ? ` (${count})` : '';
+
+  if (cart.length === 0) {
+    body.innerHTML = `
+      <div class="cart-empty">
+        <div class="icon">🛒</div>
+        <p>購物車還是空的<br>快去挑選喜歡的商品吧！</p>
+      </div>`;
+    totalEl.textContent = '0';
+    checkoutBtn.disabled = true;
+    return;
+  }
+
+  checkoutBtn.disabled = false;
+  body.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-img">
+        ${item.image
+          ? `<img src="${thumb(item.image)}" alt="${escapeAttr(item.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'cart-item-placeholder\\'>👗</div>'">`
+          : `<div class="cart-item-placeholder">👗</div>`
+        }
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${escapeHtml(item.name)}</div>
+        <div class="cart-item-variant">${escapeHtml(item.color)} / ${escapeHtml(item.size)}</div>
+        <div class="cart-item-price">NT$${(item.price * item.qty).toLocaleString()}</div>
+      </div>
+      <div class="cart-item-side">
+        <button class="cart-item-remove" onclick="removeFromCart('${escapeAttr(item.key)}')" title="移除">✕</button>
+        <div class="cart-item-qty">
+          <button class="cart-qty-btn" onclick="cartChangeQty('${escapeAttr(item.key)}', -1)">−</button>
+          <span class="cart-qty-num">${item.qty}</span>
+          <button class="cart-qty-btn" onclick="cartChangeQty('${escapeAttr(item.key)}', 1)">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  totalEl.textContent = getCartTotal().toLocaleString();
 }
 
 // ============================================================
@@ -794,10 +1709,22 @@ document.getElementById('searchInput').addEventListener('input', e => {
   }, 200);
 });
 
+// ★ M3 hash routing 監聽（返回按鈕、瀏覽器前進後退都能觸發）
+window.addEventListener('hashchange', handleRoute);
+
+// ★ M3 ESC 關閉購物車 sheet
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCart();
+});
+
 // ============================================================
 // 啟動
 // ============================================================
-loadProducts();
+loadCart();
+loadProducts().then(() => {
+  // 商品載入完成後檢查 URL hash（用戶如果直接進入 #/product/xxx）
+  if (typeof handleRoute === 'function') handleRoute();
+});
 </script>
 </body>
 </html>
