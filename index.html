@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title> WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1537,7 +1537,7 @@ function getColorHex(name) {
 const FREE_SHIPPING_THRESHOLD = 2000; // 滿多少免運
 const SHIPPING_METHODS = [
   { id: 'store_pickup',       name: '到店自取', fee: 0,  desc: '新竹縣湖口鄉明德街210號｜營業時間內取貨' },
-  { id: 'convenience_store',  name: '7-11 / 全家 店到店', fee: 60, desc: '寄達您指定的超商門市，需填店號 + 店名' },
+  { id: 'convenience_store',  name: '7-11 / 全家 / 萊爾富 店到店', fee: 60, desc: '寄達您指定的超商門市，需填店號 + 店名' },
   { id: 'post_office',        name: '郵局包裹', fee: 80, desc: '郵局普通/快捷包裹，需填地址' },
 ];
 // 訂單暫存（送單成功後保留給成功頁用）
@@ -2230,10 +2230,20 @@ function renderShippingExtra() {
     extra.innerHTML = `
       <div class="form-row">
         <label>超商品牌<span class="req">*</span></label>
-        <select class="form-select" id="fCvsBrand">
+        <select class="form-select" id="fCvsBrand" onchange="updateStoreFinderLink()">
           <option value="7-11">7-11</option>
           <option value="全家">全家 FamilyMart</option>
+          <option value="萊爾富">萊爾富 Hi-Life</option>
         </select>
+      </div>
+      <div class="form-row" style="background:linear-gradient(135deg,rgba(232,181,135,0.1),rgba(201,168,76,0.05));padding:12px;border-radius:10px;border:1px dashed var(--border-strong);">
+        <label style="display:flex;align-items:center;gap:6px;">
+          🗺️ 不知道店號？
+        </label>
+        <a href="#" id="storeFinderLink" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;padding:10px 14px;background:var(--wood);color:var(--cream);text-decoration:none;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:0.5px;transition:all .2s;">
+          用地圖查詢門市 →
+        </a>
+        <div class="form-hint" style="margin-top:6px;">💡 點上方按鈕會開新分頁到官方地圖，查到後回來填店號店名</div>
       </div>
       <div class="form-row two-col">
         <div>
@@ -2245,8 +2255,8 @@ function renderShippingExtra() {
           <input type="text" class="form-input" id="fCvsName" placeholder="OO門市">
         </div>
       </div>
-      <div class="form-hint">💡 至 7-11「地圖找門市」或全家「店鋪查詢」查詢店號</div>
     `;
+    updateStoreFinderLink();
   } else if (checkoutShipping === 'post_office') {
     extra.classList.remove('hidden');
     extra.innerHTML = `
@@ -2266,6 +2276,20 @@ function renderShippingExtra() {
     extra.classList.add('hidden');
     extra.innerHTML = '';
   }
+}
+
+// 依選的超商動態切換地圖查詢連結
+function updateStoreFinderLink() {
+  const brand = document.getElementById('fCvsBrand');
+  const link = document.getElementById('storeFinderLink');
+  if (!brand || !link) return;
+  const urls = {
+    '7-11':   'https://emap.pcsc.com.tw/',
+    '全家':   'https://www.family.com.tw/Marketing/Inquiry.aspx',
+    '萊爾富': 'https://www.hilife.com.tw/storeInquiry_street.aspx',
+  };
+  link.href = urls[brand.value] || urls['7-11'];
+  link.innerHTML = `用${brand.value === '7-11' ? '7-11' : brand.value}官方地圖查詢 →`;
 }
 
 function setShipping(id) {
