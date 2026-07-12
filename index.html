@@ -2258,40 +2258,33 @@ function renderShippingExtra() {
     extra.innerHTML = `
       <div class="form-row">
         <label>超商品牌<span class="req">*</span></label>
-        <select class="form-select" id="fCvsBrand" onchange="updateCheckoutMapLink()">
+        <select class="form-select" id="fCvsBrand">
           <option value="7-11">7-11</option>
           <option value="全家">全家 FamilyMart</option>
           <option value="萊爾富">萊爾富 Hi-Life</option>
         </select>
       </div>
 
-      <!-- 地圖查詢大按鈕 -->
-      <div style="padding:14px;background:linear-gradient(135deg,rgba(232,181,135,0.12),rgba(201,168,76,0.06));border-radius:12px;border:1px dashed var(--border-strong);margin-bottom:14px;">
-        <div style="font-size:12px;color:var(--wood);font-weight:600;margin-bottom:10px;text-align:center;">
-          🗺️ 不知道店號店名？點下方按鈕查詢
-        </div>
-        <a id="checkoutMapLink" href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;background:var(--wood);color:var(--cream);text-decoration:none;border-radius:22px;font-weight:700;font-size:14px;letter-spacing:1.5px;box-shadow:0 4px 12px rgba(139,111,71,0.25);transition:all .2s;">
-          🗺️ 用 <span id="checkoutMapBrandLabel">7-11</span> 地圖查詢（新分頁）
-        </a>
-        <div style="font-size:11px;color:var(--text-mute);margin-top:10px;text-align:center;line-height:1.6;">
-          💡 會開新分頁不會離開此頁<br>
-          查到店號店名後，切回本分頁貼上即可（資料不會消失）
+      <div class="form-row">
+        <label>想寄到的門市<span class="opt">選填｜寫店名或地點即可</span></label>
+        <input type="text" class="form-input" id="fCvsStore" placeholder="例：新竹湖口光復店">
+        <div class="form-hint" style="line-height:1.7;">
+          💡 <strong>不用查店號！</strong> 寫出「地區 + 店名」即可，例如：<br>
+          「新竹湖口光復店」「新豐火車站前 7-11」「湖口老爺路上的全家」<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;完全不填也可以送出，稍後可 LINE 補齊
         </div>
       </div>
 
-      <div class="form-row two-col">
-        <div>
-          <label>店號<span class="opt">選填｜也可留空 LINE 補</span></label>
-          <input type="text" class="form-input" id="fCvsCode" placeholder="123456" inputmode="numeric">
-        </div>
-        <div>
-          <label>店名<span class="opt">選填｜也可留空 LINE 補</span></label>
-          <input type="text" class="form-input" id="fCvsName" placeholder="OO門市">
-        </div>
+      <!-- 地圖小連結（不強迫用，備用而已） -->
+      <div style="padding:10px 12px;background:var(--cream-2);border-radius:8px;font-size:11px;color:var(--text-mute);text-align:center;">
+        🗺️ 需要查地圖？
+        <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">7-11</a>
+        ｜
+        <a href="https://www.family.com.tw/Marketing/Inquiry.aspx" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">全家</a>
+        ｜
+        <a href="https://www.hilife.com.tw/storeInquiry_street.aspx" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">萊爾富</a>
       </div>
     `;
-    updateCheckoutMapLink();
   } else if (checkoutShipping === 'post_office') {
     extra.classList.remove('hidden');
     extra.innerHTML = `
@@ -2370,9 +2363,10 @@ async function submitOrder() {
   let postal = '', address = '';
   if (checkoutShipping === 'convenience_store') {
     cvsBrand = document.getElementById('fCvsBrand').value;
-    cvsCode = document.getElementById('fCvsCode').value.trim();
-    cvsName = document.getElementById('fCvsName').value.trim();
-    // 店號店名選填：允許留空（客戶可 LINE 補齊）
+    // 新版：只有一個「想寄的門市」自由文字欄位
+    const storeEl = document.getElementById('fCvsStore');
+    cvsName = storeEl ? storeEl.value.trim() : '';
+    cvsCode = ''; // 不再要求店號
   } else if (checkoutShipping === 'post_office') {
     postal = document.getElementById('fPostal').value.trim();
     address = document.getElementById('fAddress').value.trim();
@@ -2472,44 +2466,32 @@ function renderSuccess() {
       <div class="qr-label">LINE Pay 收款碼</div>
     </div>
 
-    ${(o.shippingMethod === 'convenience_store' && (!o.cvsStoreCode || !o.cvsStoreName)) ? `
+    ${(o.shippingMethod === 'convenience_store' && !o.cvsStoreName) ? `
       <div class="form-section" style="border:2px solid var(--apricot-deep);background:linear-gradient(135deg,rgba(232,181,135,0.08),rgba(201,168,76,0.04));">
         <div class="form-section-title" style="color:var(--apricot-deep);">
-          📮 補填超商門市
+          📮 補填想寄的門市
         </div>
         <div style="font-size:12px;color:var(--text-soft);margin-bottom:14px;line-height:1.6;">
-          您選了超商店到店但還沒填店號店名 — 直接在這裡補齊，<strong>不用私訊 LINE</strong>！
+          您選了超商店到店但還沒寫想寄哪家 — 直接在這裡補齊，<strong>不用私訊 LINE</strong>！
         </div>
 
-        <!-- 地圖查詢大按鈕 -->
-        <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" id="successMap711"
-           style="display:block;text-align:center;padding:11px 16px;background:var(--wood);color:var(--cream);text-decoration:none;border-radius:20px;font-weight:700;font-size:13px;letter-spacing:1px;margin-bottom:8px;">
-          🗺️ 用 7-11 地圖查詢（新分頁）
-        </a>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <a href="https://www.family.com.tw/Marketing/Inquiry.aspx" target="_blank" rel="noopener"
-             style="flex:1;text-align:center;padding:10px;background:var(--cream-3);color:var(--wood);text-decoration:none;border-radius:16px;font-weight:600;font-size:12px;border:1px solid var(--border);">
-            🗺️ 全家地圖
-          </a>
-          <a href="https://www.hilife.com.tw/storeInquiry_street.aspx" target="_blank" rel="noopener"
-             style="flex:1;text-align:center;padding:10px;background:var(--cream-3);color:var(--wood);text-decoration:none;border-radius:16px;font-weight:600;font-size:12px;border:1px solid var(--border);">
-            🗺️ 萊爾富地圖
-          </a>
-        </div>
-        <div style="font-size:11px;color:var(--text-mute);margin-bottom:14px;text-align:center;line-height:1.6;">
-          💡 開新分頁不會離開本頁，查完切回來填即可
+        <div class="form-row">
+          <label>想寄的門市</label>
+          <input type="text" class="form-input" id="sCvsName" placeholder="例：新竹湖口光復店" value="${escapeAttr(o.cvsStoreName || '')}">
+          <div class="form-hint" style="line-height:1.7;">
+            💡 寫店名或地點即可，例：「新竹湖口光復店」「新豐火車站前 7-11」
+          </div>
         </div>
 
-        <div class="form-row two-col">
-          <div>
-            <label>店號</label>
-            <input type="text" class="form-input" id="sCvsCode" placeholder="123456" inputmode="numeric" value="${escapeAttr(o.cvsStoreCode || '')}">
-          </div>
-          <div>
-            <label>店名</label>
-            <input type="text" class="form-input" id="sCvsName" placeholder="OO門市" value="${escapeAttr(o.cvsStoreName || '')}">
-          </div>
+        <div style="padding:8px 12px;background:var(--cream-2);border-radius:8px;font-size:11px;color:var(--text-mute);text-align:center;margin-bottom:12px;">
+          🗺️ 需要查地圖？
+          <a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">7-11</a>
+          ｜
+          <a href="https://www.family.com.tw/Marketing/Inquiry.aspx" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">全家</a>
+          ｜
+          <a href="https://www.hilife.com.tw/storeInquiry_street.aspx" target="_blank" rel="noopener" style="color:var(--wood);font-weight:600;">萊爾富</a>
         </div>
+
         <button class="submit-order-btn" onclick="submitStoreUpdate()" style="padding:12px 20px;letter-spacing:2px;font-size:14px;margin-top:10px;">
           送出門市資料
         </button>
@@ -2547,14 +2529,12 @@ function renderSuccess() {
   `;
 }
 
-// 訂單送出後補填店號店名（不用 LINE，直接呼叫 Apps Script 更新 Sheets）
+// 訂單送出後補填想寄的門市（不用 LINE，直接呼叫 Apps Script 更新 Sheets）
 async function submitStoreUpdate() {
-  const codeInput = document.getElementById('sCvsCode');
   const nameInput = document.getElementById('sCvsName');
-  if (!codeInput || !nameInput) return;
-  const code = codeInput.value.trim();
+  if (!nameInput) return;
   const name = nameInput.value.trim();
-  if (!code && !name) { toast('請至少填一項（店號或店名）'); return; }
+  if (!name) { toast('請填寫想寄的門市'); return; }
   if (!lastOrder) { toast('找不到訂單資料'); return; }
 
   showLoading('更新訂單資料中...');
@@ -2564,7 +2544,7 @@ async function submitStoreUpdate() {
       body: JSON.stringify({
         action: 'updateOrderStore',
         orderNo: lastOrder.orderNo,
-        cvsStoreCode: code,
+        cvsStoreCode: '',
         cvsStoreName: name,
       }),
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2573,8 +2553,7 @@ async function submitStoreUpdate() {
     if (!data.ok) throw new Error(data.error || '更新失敗');
 
     // 更新本地資料
-    if (code) lastOrder.cvsStoreCode = code;
-    if (name) lastOrder.cvsStoreName = name;
+    lastOrder.cvsStoreName = name;
     saveOrderLocal(lastOrder);
     hideLoading();
     toast('門市資料已更新 ✓');
