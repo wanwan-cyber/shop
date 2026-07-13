@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title>WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1005,6 +1005,132 @@ main {
 }
 
 /* ============================================================
+   ★ 訂單客服對話（成功頁）
+   ============================================================ */
+.chat-section {
+  background: var(--cream-3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.chat-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--wood);
+  letter-spacing: 1.5px;
+}
+.chat-refresh {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--wood);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: inherit;
+  transition: all .15s;
+}
+.chat-refresh:hover { background: var(--apricot-soft); border-color: var(--apricot); }
+.chat-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-messages {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px 4px;
+  background: var(--cream-2);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.chat-empty {
+  text-align: center;
+  color: var(--text-mute);
+  padding: 30px 10px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.chat-msg {
+  display: flex;
+  margin: 6px 8px;
+  gap: 4px;
+}
+.chat-msg.customer { justify-content: flex-end; }
+.chat-msg.staff { justify-content: flex-start; }
+.chat-msg-wrap { max-width: 78%; display: flex; flex-direction: column; }
+.chat-msg.customer .chat-msg-wrap { align-items: flex-end; }
+.chat-msg-name {
+  font-size: 10px;
+  color: var(--text-mute);
+  margin-bottom: 2px;
+  padding: 0 6px;
+}
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.chat-msg.customer .chat-bubble {
+  background: var(--wood);
+  color: var(--cream);
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.staff .chat-bubble {
+  background: #fff;
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+.chat-time {
+  font-size: 10px;
+  color: var(--text-mute);
+  margin-top: 3px;
+  padding: 0 6px;
+}
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.chat-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+}
+.chat-input:focus {
+  outline: none;
+  border-color: var(--apricot);
+}
+.chat-send {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--wood);
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  letter-spacing: 1px;
+}
+.chat-send:hover:not(:disabled) { background: var(--apricot-deep); }
+.chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================================================
    ★ M4 結帳頁 + 訂單成功頁
    ============================================================ */
 
@@ -1765,6 +1891,8 @@ function handleRoute() {
     renderSuccess();
     successEl.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // 自動載入訂單訊息（背景執行，不擋 UI）
+    setTimeout(() => loadChatMessages(), 100);
     return;
   }
 
@@ -2191,6 +2319,11 @@ function renderCheckout() {
           <input type="text" class="form-input" id="fBirthday" placeholder="03-15（月-日）" inputmode="numeric" maxlength="5">
           <div class="form-hint">格式：MM-DD，例如 03-15。留空也可以下單。</div>
         </div>
+        <div class="form-row">
+          <label>LINE ID<span class="opt">選填｜方便老闆聯絡</span></label>
+          <input type="text" class="form-input" id="fLineId" placeholder="您的 LINE ID">
+          <div class="form-hint">💡 若訂單有問題，老闆會主動加您 LINE 聯絡，不用加入官方帳號</div>
+        </div>
       </div>
 
       <!-- 配送方式 -->
@@ -2267,10 +2400,10 @@ function renderShippingExtra() {
 
       <div class="form-row">
         <label>想寄到的門市<span class="opt">選填｜寫店名或地點即可</span></label>
-        <input type="text" class="form-input" id="fCvsStore" placeholder="例：新竹湖口光復店">
+        <input type="text" class="form-input" id="fCvsStore" placeholder="例：湖口老街全家">
         <div class="form-hint" style="line-height:1.7;">
           💡 <strong>不用查店號！</strong> 寫出「地區 + 店名」即可，例如：<br>
-          「新竹湖口光復店」「新豐火車站前 7-11」「湖口老爺路上的全家」<br>
+          「湖口老街全家」「新湖口車站前 7-11」「湖口中山路萊爾富」<br>
           &nbsp;&nbsp;&nbsp;&nbsp;完全不填也可以送出，稍後可 LINE 補齊
         </div>
       </div>
@@ -2350,6 +2483,7 @@ async function submitOrder() {
   const name = document.getElementById('fName').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
   const birthday = document.getElementById('fBirthday').value.trim();
+  const lineId = document.getElementById('fLineId').value.trim();
   const note = document.getElementById('fNote').value.trim();
 
   // 驗證
@@ -2385,7 +2519,7 @@ async function submitOrder() {
   const order = {
     createdAt: new Date().toISOString(),
     status: 'unpaid',
-    name, phone, birthday,
+    name, phone, birthday, lineId,
     shippingMethod: checkoutShipping,
     shippingLabel: shippingMeta.name || '',
     shippingFee,
@@ -2477,9 +2611,9 @@ function renderSuccess() {
 
         <div class="form-row">
           <label>想寄的門市</label>
-          <input type="text" class="form-input" id="sCvsName" placeholder="例：新竹湖口光復店" value="${escapeAttr(o.cvsStoreName || '')}">
+          <input type="text" class="form-input" id="sCvsName" placeholder="例：湖口老街全家" value="${escapeAttr(o.cvsStoreName || '')}">
           <div class="form-hint" style="line-height:1.7;">
-            💡 寫店名或地點即可，例：「新竹湖口光復店」「新豐火車站前 7-11」
+            💡 寫店名或地點即可，例：「湖口老街全家」「新湖口車站前 7-11」
           </div>
         </div>
 
@@ -2515,6 +2649,24 @@ function renderSuccess() {
       <div class="step-item">
         <div class="step-num">4</div>
         <div class="step-text">確認收款後，${o.shippingMethod === 'store_pickup' ? '通知您到店取貨 🛍️' : '為您安排寄送 📦'}</div>
+      </div>
+    </div>
+
+    <!-- ★ 訂單客服對話區塊（內建，不用 LINE） -->
+    <div class="chat-section">
+      <div class="chat-header">
+        <div class="chat-title">💬 訂單客服對話</div>
+        <button class="chat-refresh" onclick="loadChatMessages()" id="chatRefreshBtn">🔄 更新</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty">還沒有訊息<br><span style="font-size:11px;">有問題可以直接在這裡問，老闆會盡快回覆</span></div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chatInput" placeholder="輸入訊息..." maxlength="500" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChatMessage();}">
+        <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()">送出</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-mute);margin-top:8px;text-align:center;">
+        💡 老闆看到後會回覆，記得回來刷新看新訊息
       </div>
     </div>
 
@@ -2565,6 +2717,88 @@ async function submitStoreUpdate() {
     toast('更新失敗：' + (err.message || '未知錯誤'));
   }
 }
+
+// ============================================================
+// ★ 訂單客服對話（成功頁）
+// ============================================================
+let chatMessages = [];
+
+async function loadChatMessages() {
+  if (!lastOrder || !lastOrder.orderNo) return;
+  const btn = document.getElementById('chatRefreshBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrderMessages&orderNo=${encodeURIComponent(lastOrder.orderNo)}&_t=${Date.now()}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '載入訊息失敗');
+    chatMessages = data.messages || [];
+    renderChatMessages();
+  } catch (err) {
+    console.error(err);
+    toast('載入訊息失敗：' + err.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function renderChatMessages() {
+  const el = document.getElementById('chatMessages');
+  if (!el) return;
+  if (chatMessages.length === 0) {
+    el.innerHTML = '<div class="chat-empty">還沒有訊息<br><span style="font-size:11px;">有問題可以直接在這裡問，老闆會盡快回覆</span></div>';
+    return;
+  }
+  el.innerHTML = chatMessages.map(m => {
+    const isCustomer = m.sender === 'customer';
+    const time = m.timestampLocal || (m.timestamp ? new Date(m.timestamp).toLocaleString('zh-TW') : '');
+    return `
+      <div class="chat-msg ${isCustomer ? 'customer' : 'staff'}">
+        <div class="chat-msg-wrap">
+          <div class="chat-msg-name">${escapeHtml(m.senderName || (isCustomer ? '您' : '老闆'))}</div>
+          <div class="chat-bubble">${escapeHtml(m.content || '')}</div>
+          <div class="chat-time">${escapeHtml(time)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  // 自動 scroll 到最新訊息
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChatMessage() {
+  if (!lastOrder || !lastOrder.orderNo) { toast('找不到訂單資料'); return; }
+  const input = document.getElementById('chatInput');
+  const content = input.value.trim();
+  if (!content) return;
+  const btn = document.getElementById('chatSendBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '送出中...'; }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'addOrderMessage',
+        message: {
+          orderNo: lastOrder.orderNo,
+          sender: 'customer',
+          senderName: lastOrder.name || '客戶',
+          content: content,
+        },
+      }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '送出失敗');
+    input.value = '';
+    await loadChatMessages(); // 送出後重新載入
+    toast('訊息已送出 ✓');
+  } catch (err) {
+    console.error(err);
+    toast('送出失敗：' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '送出'; }
+  }
+}
+
 
 function copyOrderNo(orderNo) {
   if (navigator.clipboard) {
