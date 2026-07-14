@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title>WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1927,6 +1927,8 @@ function handleRoute() {
     renderMyOrders();
     if (myOrdersEl) myOrdersEl.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // ★ 進頁面時背景自動同步（靜默：只有真的有更新才 toast）
+    if (getSavedPhone()) autoSyncOrders(true);
     return;
   }
 
@@ -2137,6 +2139,24 @@ function handleAddToCart() {
 const CART_KEY = 'wanwan_shop_cart';
 // ★ M4 新增：訂單本地儲存（客戶可以之後回來看訂單、補填資料）
 const ORDERS_KEY = 'wanwan_shop_orders';
+// ★ 電話識別碼（客戶下單後自動記住，之後任何裝置輸入電話都能同步訂單）
+const PHONE_KEY = 'wanwan_shop_phone';
+
+function getSavedPhone() {
+  try { return localStorage.getItem(PHONE_KEY) || ''; } catch (e) { return ''; }
+}
+function saveMyPhone(phone) {
+  if (!phone) return;
+  try { localStorage.setItem(PHONE_KEY, phone); } catch (e) {}
+}
+function clearMyPhone() {
+  try { localStorage.removeItem(PHONE_KEY); } catch (e) {}
+}
+// 電話打碼顯示：0912345678 → 091****678
+function maskPhone(phone) {
+  if (!phone || phone.length < 8) return phone || '';
+  return phone.slice(0, 3) + '****' + phone.slice(-3);
+}
 
 function saveOrderLocal(order) {
   try {
@@ -2613,6 +2633,7 @@ async function submitOrder() {
     // 成功
     lastOrder = { ...order, orderNo: data.orderNo };
     saveOrderLocal(lastOrder); // ★ 存本地，之後可回來看
+    saveMyPhone(order.phone); // ★ 自動記住電話（識別碼）
     updateMyOrdersBadge(); // ★ 更新 Header 訂單徽章
     cart = [];
     saveCart();
@@ -2884,15 +2905,35 @@ function renderMyOrders() {
   const el = document.getElementById('myOrdersPage');
   if (!el) return;
   const orders = getAllLocalOrders();
+  const savedPhone = getSavedPhone();
 
-  // 共用的手機查詢區塊
-  const searchSection = `
-    <div style="background:linear-gradient(135deg,rgba(232,181,135,0.1),rgba(201,168,76,0.05));border:1px dashed var(--border-strong);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:700;color:var(--wood);margin-bottom:8px;">
-        🔍 用手機號碼查訂單
+  // 已「登入」的狀態列（顯示綁定手機）
+  const identitySection = savedPhone ? `
+    <div style="background:linear-gradient(135deg,rgba(123,164,123,0.1),rgba(178,212,192,0.06));border:1px solid rgba(123,164,123,0.3);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;color:#4a6b4a;font-weight:700;">✓ 已使用手機號碼</div>
+        <div style="font-size:15px;color:var(--text);font-family:'Menlo',monospace;font-weight:700;margin-top:2px;">${maskPhone(savedPhone)}</div>
+        <div style="font-size:10px;color:var(--text-mute);margin-top:2px;">此裝置會自動同步這支手機的訂單</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="autoSyncOrders(false)" style="padding:7px 12px;background:var(--wood);color:var(--cream);border:none;border-radius:14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">
+          🔄 同步最新
+        </button>
+        <button onclick="switchPhone()" style="padding:7px 10px;background:transparent;color:var(--text-mute);border:1px solid var(--border);border-radius:14px;font-size:11px;cursor:pointer;font-family:inherit;">
+          切換手機
+        </button>
+      </div>
+    </div>
+  ` : '';
+
+  // 未「登入」的手機輸入區塊
+  const searchSection = !savedPhone ? `
+    <div style="background:linear-gradient(135deg,rgba(232,181,135,0.12),rgba(201,168,76,0.06));border:1px dashed var(--border-strong);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--wood);margin-bottom:6px;">
+        🔍 輸入手機號碼同步訂單
       </div>
       <div style="font-size:11px;color:var(--text-mute);margin-bottom:10px;line-height:1.6;">
-        換了裝置？清了瀏覽器？輸入下單時的手機號碼把訂單找回來
+        跨裝置查看訂單、繼續對話——輸入下單時的手機號碼
       </div>
       <div style="display:flex;gap:6px;">
         <input type="tel" class="form-input" id="phoneSearchInput" placeholder="0912345678"
@@ -2901,21 +2942,22 @@ function renderMyOrders() {
                onkeydown="if(event.key==='Enter'){event.preventDefault();searchOrdersByPhone();}">
         <button onclick="searchOrdersByPhone()" id="phoneSearchBtn"
                 style="padding:9px 18px;background:var(--wood);color:var(--cream);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:1px;">
-          查詢
+          同步
         </button>
       </div>
     </div>
-  `;
+  ` : '';
 
   if (orders.length === 0) {
     el.innerHTML = `
       <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
       <h1 class="checkout-title">📮 我的訂單</h1>
+      ${identitySection}
       ${searchSection}
       <div style="text-align:center;padding:40px 20px;color:var(--text-mute);">
         <div style="font-size:48px;margin-bottom:14px;opacity:0.4;">📮</div>
-        <h3 style="color:var(--text-soft);font-size:16px;font-weight:600;margin-bottom:8px;">此裝置還沒有訂單</h3>
-        <p style="font-size:13px;line-height:1.7;">如果曾在其他裝置下過單，<br>用上方的手機號碼查詢功能找回訂單</p>
+        <h3 style="color:var(--text-soft);font-size:16px;font-weight:600;margin-bottom:8px;">${savedPhone ? '沒有找到訂單' : '此裝置還沒有訂單'}</h3>
+        <p style="font-size:13px;line-height:1.7;">${savedPhone ? '這支手機號碼下還沒有訂單記錄' : '如果曾用其他裝置下單，用上方輸入手機號碼同步訂單'}</p>
       </div>
     `;
     return;
@@ -2923,15 +2965,13 @@ function renderMyOrders() {
   el.innerHTML = `
     <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
     <h1 class="checkout-title">📮 我的訂單</h1>
+    ${identitySection}
     ${searchSection}
     <div style="font-size:12px;color:var(--text-mute);margin-bottom:16px;">
       共 <strong style="color:var(--wood);">${orders.length}</strong> 筆訂單｜點卡片查看詳情、收款碼、對話
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;">
       ${orders.map(renderMyOrderCard).join('')}
-    </div>
-    <div style="font-size:11px;color:var(--text-mute);text-align:center;margin-top:24px;line-height:1.7;">
-      💡 訂單資料存在您本機瀏覽器<br>換裝置後可用手機號碼查詢功能找回訂單
     </div>
   `;
 }
@@ -2957,6 +2997,8 @@ async function searchOrdersByPhone() {
       if (!getOrderLocal(o.orderNo)) newCount++;
       saveOrderLocal(o);
     });
+    // ★ 記住這支電話（之後打開網站自動同步）
+    saveMyPhone(phone);
     hideLoading();
     if (foundOrders.length === 0) {
       toast(`此手機號碼下沒有訂單`);
@@ -2964,7 +3006,7 @@ async function searchOrdersByPhone() {
       toast(newCount > 0 ? `找到 ${foundOrders.length} 筆訂單，${newCount} 筆新加入 ✓` : `已同步 ${foundOrders.length} 筆訂單`);
     }
     updateMyOrdersBadge();
-    renderMyOrders(); // 重新渲染列表
+    renderMyOrders();
   } catch (err) {
     hideLoading();
     console.error(err);
@@ -2972,6 +3014,48 @@ async function searchOrdersByPhone() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '查詢'; btn.style.opacity = '1'; }
   }
+}
+
+// ★ 靜默背景同步（進網站/進我的訂單頁自動呼叫）
+async function autoSyncOrders(silent) {
+  const phone = getSavedPhone();
+  if (!phone) return;
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
+    const data = await res.json();
+    if (!data.ok) return;
+    const foundOrders = data.orders || [];
+    let newCount = 0;
+    let statusChanged = 0;
+    foundOrders.forEach(o => {
+      const existing = getOrderLocal(o.orderNo);
+      if (!existing) newCount++;
+      else if (existing.status !== o.status) statusChanged++;
+      saveOrderLocal(o);
+    });
+    updateMyOrdersBadge();
+    // 如果目前在我的訂單頁，重新 render
+    if (location.hash === '#/orders') renderMyOrders();
+    if (!silent && (newCount > 0 || statusChanged > 0)) {
+      const msgs = [];
+      if (newCount > 0) msgs.push(`${newCount} 筆新訂單`);
+      if (statusChanged > 0) msgs.push(`${statusChanged} 筆狀態更新`);
+      toast('已同步：' + msgs.join('、'));
+    }
+  } catch (err) {
+    console.warn('自動同步失敗（正常，可能沒網路）:', err);
+  }
+}
+
+// ★ 切換手機號碼（登出當前，讓新電話登入）
+function switchPhone() {
+  if (!confirm('切換手機號碼後將清除此裝置上的訂單記錄，確定嗎？（雲端訂單資料不會刪除，可用手機號碼再次同步）')) return;
+  clearMyPhone();
+  try { localStorage.removeItem(ORDERS_KEY); } catch (e) {}
+  updateMyOrdersBadge();
+  renderMyOrders();
+  toast('已清除，請重新輸入手機號碼');
 }
 
 function renderMyOrderCard(o) {
@@ -3083,6 +3167,10 @@ updateMyOrdersBadge();
 loadProducts().then(() => {
   // 商品載入完成後檢查 URL hash（用戶如果直接進入 #/product/xxx）
   if (typeof handleRoute === 'function') handleRoute();
+  // ★ 進網站時如果有記住的電話，背景自動同步訂單
+  if (getSavedPhone()) {
+    setTimeout(() => autoSyncOrders(true), 500);
+  }
 });
 </script>
 </body>
