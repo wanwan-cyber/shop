@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title> WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1490,6 +1490,10 @@ main {
       <span class="search-icon">🔍</span>
       <input type="text" class="search-input" id="searchInput" placeholder="搜尋商品..." autocomplete="off">
     </div>
+    <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單" style="display:none;">
+      📮
+      <span class="cart-badge" id="myOrdersBadge" data-count="0"></span>
+    </button>
     <button class="cart-btn" onclick="openCart()" aria-label="購物車">
       🛒
       <span class="cart-badge" id="cartBadge" data-count="0"></span>
@@ -1523,6 +1527,7 @@ main {
   <section class="detail-page" id="detailPage"></section>
   <section class="checkout-page" id="checkoutPage"></section>
   <section class="success-page" id="successPage"></section>
+  <section class="checkout-page" id="myOrdersPage"></section>
 </main>
 
 <!-- Loading overlay（送單時） -->
@@ -1839,12 +1844,14 @@ function handleRoute() {
   const detailEl = document.getElementById('detailPage');
   const checkoutEl = document.getElementById('checkoutPage');
   const successEl = document.getElementById('successPage');
+  const myOrdersEl = document.getElementById('myOrdersPage');
 
   // 全部隱藏後再顯示指定頁
   listEl.classList.add('hidden');
   detailEl.classList.remove('active');
   checkoutEl.classList.remove('active');
   successEl.classList.remove('active');
+  if (myOrdersEl) myOrdersEl.classList.remove('active');
 
   if (hash.startsWith('#/product/')) {
     const id = decodeURIComponent(hash.substring('#/product/'.length));
@@ -1893,6 +1900,13 @@ function handleRoute() {
     window.scrollTo({ top: 0, behavior: 'instant' });
     // 自動載入訂單訊息（背景執行，不擋 UI）
     setTimeout(() => loadChatMessages(), 100);
+    return;
+  }
+
+  if (hash === '#/orders') {
+    renderMyOrders();
+    if (myOrdersEl) myOrdersEl.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
     return;
   }
 
@@ -2120,6 +2134,37 @@ function getOrderLocal(orderNo) {
     const orders = JSON.parse(raw);
     return orders[orderNo] || null;
   } catch (e) { return null; }
+}
+
+// 拿到所有本地訂單（陣列）
+function getAllLocalOrders() {
+  try {
+    const raw = localStorage.getItem(ORDERS_KEY);
+    if (!raw) return [];
+    const orders = JSON.parse(raw);
+    return Object.values(orders || {}).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  } catch (e) { return []; }
+}
+
+// 更新 Header 訂單徽章
+function updateMyOrdersBadge() {
+  const btn = document.getElementById('myOrdersBtn');
+  const badge = document.getElementById('myOrdersBadge');
+  const orders = getAllLocalOrders();
+  if (orders.length === 0) {
+    if (btn) btn.style.display = 'none';
+  } else {
+    if (btn) btn.style.display = 'flex';
+    if (badge) {
+      badge.textContent = orders.length;
+      badge.setAttribute('data-count', orders.length);
+    }
+  }
+}
+
+// 跳到我的訂單頁
+function goMyOrders() {
+  location.hash = '#/orders';
 }
 
 function loadCart() {
@@ -2549,6 +2594,7 @@ async function submitOrder() {
     // 成功
     lastOrder = { ...order, orderNo: data.orderNo };
     saveOrderLocal(lastOrder); // ★ 存本地，之後可回來看
+    updateMyOrdersBadge(); // ★ 更新 Header 訂單徽章
     cart = [];
     saveCart();
     hideLoading();
@@ -2800,6 +2846,83 @@ async function sendChatMessage() {
 }
 
 
+const ORDER_STATUS_LABEL = {
+  unpaid: '待付款',
+  paid: '已付款',
+  shipped: '已出貨',
+  completed: '已完成',
+  cancelled: '已取消',
+};
+const ORDER_STATUS_COLOR = {
+  unpaid: '#E8A54B',
+  paid: '#4A90E2',
+  shipped: '#9B6FBA',
+  completed: '#7BA47B',
+  cancelled: '#999',
+};
+
+function renderMyOrders() {
+  const el = document.getElementById('myOrdersPage');
+  if (!el) return;
+  const orders = getAllLocalOrders();
+  if (orders.length === 0) {
+    el.innerHTML = `
+      <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
+      <div style="text-align:center;padding:60px 20px;color:var(--text-mute);">
+        <div style="font-size:48px;margin-bottom:14px;opacity:0.4;">📮</div>
+        <h3 style="color:var(--text-soft);font-size:16px;font-weight:600;margin-bottom:8px;">還沒有訂單</h3>
+        <p style="font-size:13px;">下單後在這裡可以看到訂單狀態、收款碼、跟老闆對話</p>
+      </div>
+    `;
+    return;
+  }
+  el.innerHTML = `
+    <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
+    <h1 class="checkout-title">📮 我的訂單</h1>
+    <div style="font-size:12px;color:var(--text-mute);margin-bottom:16px;">
+      共 <strong style="color:var(--wood);">${orders.length}</strong> 筆訂單｜點卡片查看詳情、收款碼、對話
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${orders.map(renderMyOrderCard).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text-mute);text-align:center;margin-top:24px;line-height:1.7;">
+      💡 訂單資料存在您本機瀏覽器<br>換裝置或清瀏覽器資料後將無法看到歷史訂單
+    </div>
+  `;
+}
+
+function renderMyOrderCard(o) {
+  const status = o.status || 'unpaid';
+  const label = ORDER_STATUS_LABEL[status] || status;
+  const color = ORDER_STATUS_COLOR[status] || '#999';
+  const items = Array.isArray(o.items) ? o.items : [];
+  const itemCount = items.reduce((s, i) => s + (i.qty || 0), 0);
+  const firstImage = (items[0] && items[0].image) || '';
+  const timeText = o.createdAt ? new Date(o.createdAt).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+  return `
+    <div onclick="location.hash='#/order-success/${encodeURIComponent(o.orderNo)}'"
+         style="background:var(--cream-3);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;gap:12px;align-items:center;transition:all .2s;">
+      <div style="width:56px;height:56px;border-radius:10px;overflow:hidden;background:var(--cream-2);flex-shrink:0;">
+        ${firstImage
+          ? `<img src="${thumb(firstImage)}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text-mute);">📦</div>`
+        }
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
+          <div style="font-family:'Menlo',monospace;font-size:12px;font-weight:700;color:var(--wood);">${escapeHtml(o.orderNo || '')}</div>
+          <span style="background:${color};color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:0.5px;flex-shrink:0;">${label}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:3px;">
+          ${itemCount} 件商品 · NT$${(o.total || 0).toLocaleString()}
+        </div>
+        <div style="font-size:11px;color:var(--text-mute);">${escapeHtml(timeText)}</div>
+      </div>
+      <div style="color:var(--text-mute);font-size:16px;flex-shrink:0;">›</div>
+    </div>
+  `;
+}
+
 function copyOrderNo(orderNo) {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(orderNo).then(() => toast('訂單編號已複製 ✓'));
@@ -2859,6 +2982,7 @@ window.addEventListener('keydown', e => {
 // 啟動
 // ============================================================
 loadCart();
+updateMyOrdersBadge();
 loadProducts().then(() => {
   // 商品載入完成後檢查 URL hash（用戶如果直接進入 #/product/xxx）
   if (typeof handleRoute === 'function') handleRoute();
