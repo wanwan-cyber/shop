@@ -1490,7 +1490,7 @@ main {
       <span class="search-icon">🔍</span>
       <input type="text" class="search-input" id="searchInput" placeholder="搜尋商品..." autocomplete="off">
     </div>
-    <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單" style="display:none;">
+    <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
       📮
       <span class="cart-badge" id="myOrdersBadge" data-count="0"></span>
     </button>
@@ -1745,8 +1745,19 @@ function renderCatBar() {
 
 function setCat(cat) {
   currentCat = cat;
+  // ★ 修 bug：手動切回商品列表頁（避免在詳情/結帳/成功/我的訂單頁時點分類看不到反應）
+  document.getElementById('pageList').classList.remove('hidden');
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  // 清 URL hash（不觸發 hashchange 避免額外 render）
+  if (location.hash) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  currentProduct = null;
   render();
-  // scroll 分類 chip 到中央（如果需要）
+  // scroll 分類 chip 到中央
   const active = document.querySelector('.cat-chip.active');
   if (active && active.scrollIntoView) {
     active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -1830,7 +1841,16 @@ function clearAllFilters() {
   currentCat = '全部';
   currentSearch = '';
   document.getElementById('searchInput').value = '';
-  location.hash = '';
+  // ★ 修 bug：手動切回商品列表頁
+  document.getElementById('pageList').classList.remove('hidden');
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  if (location.hash) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  currentProduct = null;
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2148,16 +2168,15 @@ function getAllLocalOrders() {
 
 // 更新 Header 訂單徽章
 function updateMyOrdersBadge() {
-  const btn = document.getElementById('myOrdersBtn');
   const badge = document.getElementById('myOrdersBadge');
   const orders = getAllLocalOrders();
-  if (orders.length === 0) {
-    if (btn) btn.style.display = 'none';
-  } else {
-    if (btn) btn.style.display = 'flex';
-    if (badge) {
+  if (badge) {
+    if (orders.length > 0) {
       badge.textContent = orders.length;
       badge.setAttribute('data-count', orders.length);
+    } else {
+      badge.textContent = '';
+      badge.setAttribute('data-count', 0);
     }
   }
 }
@@ -2865,13 +2884,38 @@ function renderMyOrders() {
   const el = document.getElementById('myOrdersPage');
   if (!el) return;
   const orders = getAllLocalOrders();
+
+  // 共用的手機查詢區塊
+  const searchSection = `
+    <div style="background:linear-gradient(135deg,rgba(232,181,135,0.1),rgba(201,168,76,0.05));border:1px dashed var(--border-strong);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--wood);margin-bottom:8px;">
+        🔍 用手機號碼查訂單
+      </div>
+      <div style="font-size:11px;color:var(--text-mute);margin-bottom:10px;line-height:1.6;">
+        換了裝置？清了瀏覽器？輸入下單時的手機號碼把訂單找回來
+      </div>
+      <div style="display:flex;gap:6px;">
+        <input type="tel" class="form-input" id="phoneSearchInput" placeholder="0912345678"
+               inputmode="numeric" maxlength="10"
+               style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();searchOrdersByPhone();}">
+        <button onclick="searchOrdersByPhone()" id="phoneSearchBtn"
+                style="padding:9px 18px;background:var(--wood);color:var(--cream);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:1px;">
+          查詢
+        </button>
+      </div>
+    </div>
+  `;
+
   if (orders.length === 0) {
     el.innerHTML = `
       <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
-      <div style="text-align:center;padding:60px 20px;color:var(--text-mute);">
+      <h1 class="checkout-title">📮 我的訂單</h1>
+      ${searchSection}
+      <div style="text-align:center;padding:40px 20px;color:var(--text-mute);">
         <div style="font-size:48px;margin-bottom:14px;opacity:0.4;">📮</div>
-        <h3 style="color:var(--text-soft);font-size:16px;font-weight:600;margin-bottom:8px;">還沒有訂單</h3>
-        <p style="font-size:13px;">下單後在這裡可以看到訂單狀態、收款碼、跟老闆對話</p>
+        <h3 style="color:var(--text-soft);font-size:16px;font-weight:600;margin-bottom:8px;">此裝置還沒有訂單</h3>
+        <p style="font-size:13px;line-height:1.7;">如果曾在其他裝置下過單，<br>用上方的手機號碼查詢功能找回訂單</p>
       </div>
     `;
     return;
@@ -2879,6 +2923,7 @@ function renderMyOrders() {
   el.innerHTML = `
     <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
     <h1 class="checkout-title">📮 我的訂單</h1>
+    ${searchSection}
     <div style="font-size:12px;color:var(--text-mute);margin-bottom:16px;">
       共 <strong style="color:var(--wood);">${orders.length}</strong> 筆訂單｜點卡片查看詳情、收款碼、對話
     </div>
@@ -2886,9 +2931,47 @@ function renderMyOrders() {
       ${orders.map(renderMyOrderCard).join('')}
     </div>
     <div style="font-size:11px;color:var(--text-mute);text-align:center;margin-top:24px;line-height:1.7;">
-      💡 訂單資料存在您本機瀏覽器<br>換裝置或清瀏覽器資料後將無法看到歷史訂單
+      💡 訂單資料存在您本機瀏覽器<br>換裝置後可用手機號碼查詢功能找回訂單
     </div>
   `;
+}
+
+// ★ 用手機號碼查詢訂單（跨裝置查詢）
+async function searchOrdersByPhone() {
+  const input = document.getElementById('phoneSearchInput');
+  if (!input) return;
+  const phone = input.value.trim().replace(/[^0-9]/g, '');
+  if (!phone) { toast('請輸入手機號碼'); return; }
+  if (!/^09\d{8}$/.test(phone)) { toast('手機格式錯誤（需 09 開頭 10 碼）'); return; }
+  const btn = document.getElementById('phoneSearchBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '查詢中...'; btn.style.opacity = '0.6'; }
+  showLoading('查詢訂單中...');
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '查詢失敗');
+    const foundOrders = data.orders || [];
+    // 存進 localStorage（下次不用再查）
+    let newCount = 0;
+    foundOrders.forEach(o => {
+      if (!getOrderLocal(o.orderNo)) newCount++;
+      saveOrderLocal(o);
+    });
+    hideLoading();
+    if (foundOrders.length === 0) {
+      toast(`此手機號碼下沒有訂單`);
+    } else {
+      toast(newCount > 0 ? `找到 ${foundOrders.length} 筆訂單，${newCount} 筆新加入 ✓` : `已同步 ${foundOrders.length} 筆訂單`);
+    }
+    updateMyOrdersBadge();
+    renderMyOrders(); // 重新渲染列表
+  } catch (err) {
+    hideLoading();
+    console.error(err);
+    toast('查詢失敗：' + (err.message || '未知錯誤'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '查詢'; btn.style.opacity = '1'; }
+  }
 }
 
 function renderMyOrderCard(o) {
@@ -2966,7 +3049,21 @@ document.getElementById('searchInput').addEventListener('input', e => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     currentSearch = e.target.value.trim();
-    renderProducts();
+    // ★ 修 bug：搜尋時如果不在列表頁就切回來
+    if (location.hash || document.getElementById('pageList').classList.contains('hidden')) {
+      document.getElementById('pageList').classList.remove('hidden');
+      ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      if (location.hash) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+      currentProduct = null;
+      render();
+    } else {
+      renderProducts();
+    }
   }, 200);
 });
 
