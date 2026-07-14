@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title> WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1796,13 +1796,14 @@ function cardHtml(p) {
     ? `<img class="card-image" src="${thumb(img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👗</div>'">`
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
+  const igIcon = p.link ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
   const colorsHtml = (p.colors || []).slice(0, 5).map(c => {
     return `<span class="color-dot" style="background:${getColorHex(c)}" title="${escapeAttr(c)}"></span>`;
   }).join('');
 
   return `
     <article class="product-card ${soldOut ? 'sold-out' : ''}" onclick="openProduct('${p.id}')">
-      <div class="card-image-wrap">${soldBadge}${imgHtml}</div>
+      <div class="card-image-wrap">${soldBadge}${igIcon}${imgHtml}</div>
       <div class="card-body">
         <div class="card-colors">${colorsHtml}</div>
         <div class="card-name">${escapeHtml(p.name || '未命名商品')}</div>
@@ -1999,6 +2000,13 @@ function renderDetail() {
         ${p.cat ? `<div class="detail-cat">${escapeHtml(p.cat)}</div>` : ''}
         <h1 class="detail-name">${escapeHtml(p.name || '')}</h1>
         <div class="detail-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
+
+        ${p.link ? `
+          <a href="${escapeAttr(p.link)}" target="_blank" rel="noopener"
+             style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;text-decoration:none;border-radius:22px;font-weight:700;font-size:13px;letter-spacing:1px;box-shadow:0 4px 12px rgba(220,39,67,0.25);margin-top:-6px;">
+            📷 查看 IG 貼文（更多實穿、影片）
+          </a>
+        ` : ''}
 
         ${availableColors.length > 0 ? `
           <div class="variant-section">
