@@ -1005,6 +1005,87 @@ main {
 }
 
 /* ============================================================
+   ★ 首頁 Hero Banner 輪播
+   ============================================================ */
+.hero-banner {
+  max-width: 1280px;
+  margin: 12px auto 0;
+  padding: 0 16px;
+}
+.banner-slider {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--cream-2);
+  box-shadow: var(--shadow);
+}
+.banner-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .6s ease-in-out;
+  cursor: pointer;
+}
+.banner-slide.active { opacity: 1; }
+.banner-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.banner-slide-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40px 24px 24px;
+  background: linear-gradient(to top, rgba(74,63,53,0.7), transparent);
+  color: #fff;
+}
+.banner-slide-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.banner-slide-subtitle {
+  font-size: 13px;
+  opacity: 0.95;
+  letter-spacing: 0.5px;
+}
+.banner-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+.banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all .2s;
+  border: none;
+  padding: 0;
+}
+.banner-dot.active {
+  width: 22px;
+  background: #fff;
+}
+@media (max-width: 640px) {
+  .banner-slider { aspect-ratio: 16 / 9; border-radius: 12px; }
+  .banner-slide-title { font-size: 17px; }
+  .banner-slide-subtitle { font-size: 11px; }
+  .banner-slide-overlay { padding: 30px 16px 18px; }
+}
+
+/* ============================================================
    ★ 訂單客服對話（成功頁）
    ============================================================ */
 .chat-section {
@@ -1516,6 +1597,7 @@ main {
 <!-- ===== MAIN ===== -->
 <main>
   <div class="page-list" id="pageList">
+    <div class="hero-banner" id="heroBanner" style="display:none;"></div>
     <div class="result-count" id="resultCount"></div>
     <div id="productArea">
       <div class="loading">
@@ -3180,6 +3262,86 @@ loadProducts().then(() => {
     setTimeout(() => autoSyncOrders(true), 500);
   }
 });
+// ★ 載入首頁 Banner
+loadBanners();
+
+// ============================================================
+// ★ 首頁 Hero Banner 輪播
+// ============================================================
+let heroBanners = [];
+let heroBannerIdx = 0;
+let heroBannerTimer = null;
+
+async function loadBanners() {
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=getBanners&_t=' + Date.now());
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.banners) && data.banners.length > 0) {
+      heroBanners = data.banners;
+      renderHeroBanner();
+    }
+  } catch (e) { /* 靜默失敗 */ }
+}
+
+function renderHeroBanner() {
+  const wrap = document.getElementById('heroBanner');
+  if (!wrap || heroBanners.length === 0) { if (wrap) wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div class="banner-slider">
+      ${heroBanners.map((b, i) => `
+        <div class="banner-slide ${i === 0 ? 'active' : ''}" onclick="onBannerClick(${i})">
+          <img src="${escapeAttr(b.image || '')}" alt="${escapeAttr(b.title || '')}" loading="${i === 0 ? 'eager' : 'lazy'}" onerror="this.style.opacity=0.3">
+          ${(b.title || b.subtitle) ? `
+            <div class="banner-slide-overlay">
+              ${b.title ? `<div class="banner-slide-title">${escapeHtml(b.title)}</div>` : ''}
+              ${b.subtitle ? `<div class="banner-slide-subtitle">${escapeHtml(b.subtitle)}</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
+      ${heroBanners.length > 1 ? `
+        <div class="banner-dots">
+          ${heroBanners.map((_, i) => `<button class="banner-dot ${i === 0 ? 'active' : ''}" onclick="setBannerIdx(${i})" aria-label="第 ${i+1} 張"></button>`).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+  heroBannerIdx = 0;
+  startBannerRotation();
+}
+
+function startBannerRotation() {
+  if (heroBannerTimer) clearInterval(heroBannerTimer);
+  if (heroBanners.length <= 1) return;
+  heroBannerTimer = setInterval(() => {
+    setBannerIdx((heroBannerIdx + 1) % heroBanners.length);
+  }, 5000);
+}
+
+function setBannerIdx(i) {
+  heroBannerIdx = i;
+  document.querySelectorAll('.banner-slide').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  document.querySelectorAll('.banner-dot').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+}
+
+function onBannerClick(i) {
+  const b = heroBanners[i];
+  if (!b || !b.link) return;
+  const link = b.link.trim();
+  if (link.startsWith('#/')) {
+    location.hash = link.substring(1);
+  } else if (link.startsWith('http')) {
+    window.open(link, '_blank', 'noopener');
+  } else {
+    location.hash = link;
+  }
+}
 </script>
 </body>
 </html>
