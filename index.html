@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title> WANWAN SELECTED</title>
+<title>萬萬精選 WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1682,8 +1682,11 @@ function toCloudinaryImage(url, width, quality) {
 // 列表縮圖：600px（未來原檔高清時剛好；現況原檔 450 會直接送 450）
 function thumb(url) { return toCloudinaryImage(url, 600, 'auto:good'); }
 
-// 詳情頁主圖：1440px（未來原檔高清時撐滿 Retina；現況會送原檔尺寸）
+// 詳情頁主圖:1440px（未來原檔高清時撐滿 Retina；現況會送原檔尺寸）
 function full(url) { return toCloudinaryImage(url, 1440, 'auto:best'); }
+
+// ★ 首頁 Banner 大圖：2000px + 最佳品質（Retina 高清）
+function banner(url) { return toCloudinaryImage(url, 2000, 'auto:best'); }
 
 // ============================================================
 // Mock 資料（開發用，接 Apps Script 後會替換）
@@ -3292,7 +3295,7 @@ function renderHeroBanner() {
     <div class="banner-slider">
       ${heroBanners.map((b, i) => `
         <div class="banner-slide ${i === 0 ? 'active' : ''}" onclick="onBannerClick(${i})">
-          <img src="${escapeAttr(b.image || '')}" alt="${escapeAttr(b.title || '')}" loading="${i === 0 ? 'eager' : 'lazy'}" onerror="this.style.opacity=0.3">
+          <img src="${escapeAttr(banner(b.image || ''))}" alt="${escapeAttr(b.title || '')}" loading="${i === 0 ? 'eager' : 'lazy'}" onerror="this.style.opacity=0.3">
           ${(b.title || b.subtitle) ? `
             <div class="banner-slide-overlay">
               ${b.title ? `<div class="banner-slide-title">${escapeHtml(b.title)}</div>` : ''}
