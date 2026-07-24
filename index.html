@@ -461,6 +461,60 @@ main {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== SKELETON LOADER（首屏骨架）===== */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 0;
+}
+@media (min-width: 640px) {
+  .skeleton-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+}
+@media (min-width: 1024px) {
+  .skeleton-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+}
+
+.skeleton-card {
+  background: var(--cream-3);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 111, 71, 0.06) 0%,
+    rgba(139, 111, 71, 0.13) 50%,
+    rgba(139, 111, 71, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.skeleton-body { padding: 12px 14px 14px; }
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.skeleton-line.short { width: 55%; }
+.skeleton-line.mid   { width: 80%; }
+.skeleton-line.price { width: 40%; height: 16px; margin-top: 12px; margin-bottom: 0; }
+
 /* ===== TOAST ===== */
 .toast {
   position: fixed;
@@ -1600,9 +1654,71 @@ main {
     <div class="hero-banner" id="heroBanner" style="display:none;"></div>
     <div class="result-count" id="resultCount"></div>
     <div id="productArea">
-      <div class="loading">
-        <div class="spinner"></div>
-        <div>載入中...</div>
+      <div class="skeleton-grid" id="skeletonGrid">
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-image skeleton-shimmer"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line mid skeleton-shimmer"></div>
+            <div class="skeleton-line short skeleton-shimmer"></div>
+            <div class="skeleton-line price skeleton-shimmer"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
