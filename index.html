@@ -2348,6 +2348,9 @@ function handleAddToCart() {
 const CART_KEY = 'wanwan_shop_cart';
 // ★ M4 新增：訂單本地儲存（客戶可以之後回來看訂單、補填資料）
 const ORDERS_KEY = 'wanwan_shop_orders';
+// 🛟 本地訂單上限：超過就 FIFO 淘汰最舊的，避免 localStorage 塞爆
+// 客人若要看更早的訂單，可用手機號從雲端拉回
+const MAX_LOCAL_ORDERS = 30;
 // ★ 電話識別碼（客戶下單後自動記住，之後任何裝置輸入電話都能同步訂單）
 const PHONE_KEY = 'wanwan_shop_phone';
 
@@ -2372,8 +2375,65 @@ function saveOrderLocal(order) {
     const raw = localStorage.getItem(ORDERS_KEY);
     const orders = raw ? JSON.parse(raw) : {};
     orders[order.orderNo] = order;
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  } catch (e) {}
+    // 🛟 保留最新 MAX_LOCAL_ORDERS 筆，其他 FIFO 淘汰
+    const trimmed = trimOrdersMap(orders, MAX_LOCAL_ORDERS);
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(trimmed));
+  } catch (e) {
+    // 通常是 QuotaExceededError → 狠砍到 10 筆再重試
+    if (e && (e.name === 'QuotaExceededError' || String(e).includes('quota'))) {
+      try {
+        const raw = localStorage.getItem(ORDERS_KEY);
+        const orders = raw ? JSON.parse(raw) : {};
+        orders[order.orderNo] = order;
+        const trimmed = trimOrdersMap(orders, 10);
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(trimmed));
+      } catch (e2) { /* 真的沒救才放棄 */ }
+    }
+  }
+}
+
+// 保留 map 中最新的 max 筆訂單（用 createdAt 排序），其他丟棄
+function trimOrdersMap(ordersMap, max) {
+  const arr = Object.values(ordersMap || {});
+  if (arr.length <= max) return ordersMap;
+  arr.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  const kept = arr.slice(0, max);
+  const out = {};
+  kept.forEach(o => { out[o.orderNo] = o; });
+  return out;
+}
+
+// 🛟 批次寫入：一次合併 + 一次 trim + 一次 setItem（給雲端同步用）
+// 回傳：{ added, updated, statusChanged }
+function saveOrdersBulk(newOrders) {
+  const result = { added: 0, updated: 0, statusChanged: 0 };
+  if (!Array.isArray(newOrders) || newOrders.length === 0) return result;
+  try {
+    const raw = localStorage.getItem(ORDERS_KEY);
+    const orders = raw ? JSON.parse(raw) : {};
+    newOrders.forEach(o => {
+      const existing = orders[o.orderNo];
+      if (!existing) result.added++;
+      else {
+        result.updated++;
+        if (existing.status !== o.status) result.statusChanged++;
+      }
+      orders[o.orderNo] = o;
+    });
+    const trimmed = trimOrdersMap(orders, MAX_LOCAL_ORDERS);
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(trimmed));
+  } catch (e) {
+    if (e && (e.name === 'QuotaExceededError' || String(e).includes('quota'))) {
+      // 塞爆的極端情境：只保留新收到的最新 10 筆
+      try {
+        const onlyNew = {};
+        newOrders.forEach(o => { onlyNew[o.orderNo] = o; });
+        const trimmed = trimOrdersMap(onlyNew, 10);
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(trimmed));
+      } catch (e2) { /* 真的沒救 */ }
+    }
+  }
+  return result;
 }
 
 function getOrderLocal(orderNo) {
@@ -3200,12 +3260,8 @@ async function searchOrdersByPhone() {
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || '查詢失敗');
     const foundOrders = data.orders || [];
-    // 存進 localStorage（下次不用再查）
-    let newCount = 0;
-    foundOrders.forEach(o => {
-      if (!getOrderLocal(o.orderNo)) newCount++;
-      saveOrderLocal(o);
-    });
+    // 🛟 批次寫入，避免迴圈 setItem 拖慢速度
+    const { added: newCount } = saveOrdersBulk(foundOrders);
     // ★ 記住這支電話（之後打開網站自動同步）
     saveMyPhone(phone);
     hideLoading();
@@ -3235,14 +3291,8 @@ async function autoSyncOrders(silent) {
     const data = await res.json();
     if (!data.ok) return;
     const foundOrders = data.orders || [];
-    let newCount = 0;
-    let statusChanged = 0;
-    foundOrders.forEach(o => {
-      const existing = getOrderLocal(o.orderNo);
-      if (!existing) newCount++;
-      else if (existing.status !== o.status) statusChanged++;
-      saveOrderLocal(o);
-    });
+    // 🛟 批次寫入 + 統計
+    const { added: newCount, statusChanged } = saveOrdersBulk(foundOrders);
     updateMyOrdersBadge();
     // 如果目前在我的訂單頁，重新 render
     if (location.hash === '#/orders') renderMyOrders();
