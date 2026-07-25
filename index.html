@@ -1799,7 +1799,18 @@ function toCloudinaryImage(url, width, quality) {
 function thumb(url) { return toCloudinaryImage(url, 600, 'auto:good'); }
 
 // 詳情頁主圖:1440px（未來原檔高清時撐滿 Retina；現況會送原檔尺寸）
+// 詳情頁主圖：1440px + auto:best（畫質不動，Retina 高清）
 function full(url) { return toCloudinaryImage(url, 1440, 'auto:best'); }
+
+// 🌐 詳情頁主圖 srcset：全部維持 auto:best 最高品質，只用尺寸分流
+// 手機 720w、桌機 1080w、Retina 1440w — 品質完全一致
+function fullSrcset(url) {
+  if (!url || !url.includes('/upload/')) return '';
+  const w720  = toCloudinaryImage(url, 720,  'auto:best');
+  const w1080 = toCloudinaryImage(url, 1080, 'auto:best');
+  const w1440 = toCloudinaryImage(url, 1440, 'auto:best');
+  return `${w720} 720w, ${w1080} 1080w, ${w1440} 1440w`;
+}
 
 // ★ 首頁 Banner 大圖：2000px + 最佳品質（Retina 高清）
 function banner(url) { return toCloudinaryImage(url, 2000, 'auto:best'); }
@@ -2219,7 +2230,13 @@ function renderDetail() {
         <div class="detail-main-image">
           ${soldOutAll ? '<div class="detail-sold-badge">SOLD OUT</div>' : ''}
           ${mainImg
-            ? `<img src="${full(mainImg)}" alt="${escapeAttr(p.name)}" loading="eager">`
+            ? `<img
+                src="${full(mainImg)}"
+                srcset="${fullSrcset(mainImg)}"
+                sizes="(min-width: 900px) 600px, 100vw"
+                alt="${escapeAttr(p.name)}"
+                loading="eager"
+                fetchpriority="high">`
             : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;color:var(--text-mute);">👗</div>`
           }
         </div>
