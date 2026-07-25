@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FAF3EB">
-<title> WANWAN SELECTED</title>
+<title>WANWAN SELECTED</title>
 <style>
 :root {
   --cream: #FAF3EB;
@@ -1804,6 +1804,17 @@ function full(url) { return toCloudinaryImage(url, 1440, 'auto:best'); }
 // ★ 首頁 Banner 大圖：2000px + 最佳品質（Retina 高清）
 function banner(url) { return toCloudinaryImage(url, 2000, 'auto:best'); }
 
+// 🌐 Banner srcset：讓瀏覽器依實際螢幕挑最小夠用的尺寸
+// 手機（~430px 寬）拿 800w；桌機拿 1440w；4K 才拿 2000w
+// 省下手機約 60% 流量
+function bannerSrcset(url) {
+  if (!url || !url.includes('/upload/')) return '';
+  const w800  = toCloudinaryImage(url, 800,  'auto:good');
+  const w1440 = toCloudinaryImage(url, 1440, 'auto:best');
+  const w2000 = toCloudinaryImage(url, 2000, 'auto:best');
+  return `${w800} 800w, ${w1440} 1440w, ${w2000} 2000w`;
+}
+
 // ============================================================
 // Mock 資料（開發用，接 Apps Script 後會替換）
 // ============================================================
@@ -1880,6 +1891,23 @@ let checkoutShipping = 'store_pickup';
 // ============================================================
 // 載入商品（先嘗試 Apps Script，失敗回退到 mock）
 // ============================================================
+// ⏱ 帶超時的 fetch 包裝：Apps Script 若掛掉/卡住，超過 15 秒就終止並拋錯
+// 避免客人看到「永遠轉圈圈」的無回應體驗
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err && err.name === 'AbortError') {
+      throw new Error('連線超時，伺服器沒回應（請檢查網路或稍後再試）');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function loadProducts() {
   if (!APPS_SCRIPT_URL) {
     // 還沒接 Apps Script
@@ -1889,7 +1917,7 @@ async function loadProducts() {
     return;
   }
   try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=${APPS_SCRIPT_ACTION}`);
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=${APPS_SCRIPT_ACTION}`);
     const data = await res.json();
     if (data && data.ok && Array.isArray(data.products)) {
       allProducts = data.products;
@@ -2068,6 +2096,11 @@ function handleRoute() {
   const successEl = document.getElementById('successPage');
   const myOrdersEl = document.getElementById('myOrdersPage');
 
+  // 📄 離開商品詳情頁 → 回復預設分頁標題
+  if (!hash.startsWith('#/product/')) {
+    document.title = 'WANWAN SELECTED';
+  }
+
   // 全部隱藏後再顯示指定頁
   listEl.classList.add('hidden');
   detailEl.classList.remove('active');
@@ -2164,6 +2197,9 @@ function showDetail(product) {
 function renderDetail() {
   const p = currentProduct;
   if (!p) return;
+
+  // 📄 分頁標題改成商品名（切換分頁時看得出來是哪個商品）
+  document.title = `${p.name} · WANWAN SELECTED`;
 
   const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
   const mainImg = images[selectedImageIdx];
@@ -2891,7 +2927,7 @@ async function submitOrder() {
 
   try {
     if (!APPS_SCRIPT_URL) throw new Error('尚未設定伺服器網址');
-    const res = await fetch(APPS_SCRIPT_URL, {
+    const res = await fetchWithTimeout(APPS_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'submitOrder', order }),
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3046,7 +3082,7 @@ async function submitStoreUpdate() {
 
   showLoading('更新訂單資料中...');
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
+    const res = await fetchWithTimeout(APPS_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({
         action: 'updateOrderStore',
@@ -3083,7 +3119,7 @@ async function loadChatMessages() {
   const btn = document.getElementById('chatRefreshBtn');
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrderMessages&orderNo=${encodeURIComponent(lastOrder.orderNo)}&_t=${Date.now()}`);
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getOrderMessages&orderNo=${encodeURIComponent(lastOrder.orderNo)}&_t=${Date.now()}`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || '載入訊息失敗');
     chatMessages = data.messages || [];
@@ -3128,7 +3164,7 @@ async function sendChatMessage() {
   const btn = document.getElementById('chatSendBtn');
   if (btn) { btn.disabled = true; btn.textContent = '送出中...'; }
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
+    const res = await fetchWithTimeout(APPS_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify({
         action: 'addOrderMessage',
@@ -3256,7 +3292,7 @@ async function searchOrdersByPhone() {
   if (btn) { btn.disabled = true; btn.textContent = '查詢中...'; btn.style.opacity = '0.6'; }
   showLoading('查詢訂單中...');
   try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || '查詢失敗');
     const foundOrders = data.orders || [];
@@ -3287,7 +3323,7 @@ async function autoSyncOrders(silent) {
   if (!phone) return;
   if (!APPS_SCRIPT_URL) return;
   try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getOrdersByPhone&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
     const data = await res.json();
     if (!data.ok) return;
     const foundOrders = data.orders || [];
@@ -3444,7 +3480,7 @@ let heroBannerTimer = null;
 async function loadBanners() {
   if (!APPS_SCRIPT_URL) return;
   try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=getBanners&_t=' + Date.now());
+    const res = await fetchWithTimeout(APPS_SCRIPT_URL + '?action=getBanners&_t=' + Date.now());
     const data = await res.json();
     if (data.ok && Array.isArray(data.banners) && data.banners.length > 0) {
       heroBanners = data.banners;
@@ -3461,7 +3497,13 @@ function renderHeroBanner() {
     <div class="banner-slider">
       ${heroBanners.map((b, i) => `
         <div class="banner-slide ${i === 0 ? 'active' : ''}" onclick="onBannerClick(${i})">
-          <img src="${escapeAttr(banner(b.image || ''))}" alt="${escapeAttr(b.title || '')}" loading="${i === 0 ? 'eager' : 'lazy'}" onerror="this.style.opacity=0.3">
+          <img
+            src="${escapeAttr(banner(b.image || ''))}"
+            srcset="${escapeAttr(bannerSrcset(b.image || ''))}"
+            sizes="100vw"
+            alt="${escapeAttr(b.title || '')}"
+            loading="${i === 0 ? 'eager' : 'lazy'}"
+            onerror="this.style.opacity=0.3">
           ${(b.title || b.subtitle) ? `
             <div class="banner-slide-overlay">
               ${b.title ? `<div class="banner-slide-title">${escapeHtml(b.title)}</div>` : ''}
