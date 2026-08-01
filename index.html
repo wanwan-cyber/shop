@@ -335,17 +335,20 @@ main {
 
 .card-colors {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   align-items: center;
   min-height: 14px;
+  flex-wrap: wrap;
 }
 
 .color-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 1px solid rgba(139, 111, 71, 0.2);
+  border: 1px solid rgba(139, 111, 71, 0.25);
   display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .card-name {
@@ -1860,16 +1863,16 @@ let selectedImageIdx = 0;
 // ★ M3 中文顏色 → 色碼對照（顯示顏色圓點用）
 // ============================================================
 const COLOR_MAP = {
-  '白': '#FFFFFF', '米白': '#F5EFE4', '奶白': '#FAF3EB', '象牙': '#F3EAD3',
+  '白': '#FFFFFF', '米白': '#F5EFE4', '奶白': '#FAF3EB', '象牙': '#F3EAD3', '霧白': '#EFEBE4', '珍珠白': '#F0EBE0',
   '黑': '#2B2621', '深黑': '#0F0D0B',
-  '灰': '#8E8579', '淺灰': '#B8B0A3', '深灰': '#5A544B', '煙灰': '#7F776D',
-  '藍': '#4A6FA5', '淺藍': '#A3B8D6', '深藍': '#2C4770', '牛仔藍': '#4A6285', '寶藍': '#2450A0',
-  '紅': '#C94D4D', '深紅': '#8B2E2E', '正紅': '#D63A3A', '磚紅': '#B85348',
-  '粉': '#E8B4B8', '淺粉': '#F2CFD4', '嫩粉': '#F5D5D5', '珊瑚粉': '#EFA69A', '玫瑰': '#D48090',
-  '綠': '#5A7A5A', '軍綠': '#5B6845', '橄欖': '#7A7248', '墨綠': '#3D4E3B', '抹茶': '#A2B487', '薄荷': '#B4D4C0',
+  '灰': '#8E8579', '淺灰': '#B8B0A3', '深灰': '#5A544B', '煙灰': '#7F776D', '霧灰': '#9C948A',
+  '藍': '#4A6FA5', '淺藍': '#A3B8D6', '深藍': '#2C4770', '牛仔藍': '#4A6285', '寶藍': '#2450A0', '天藍': '#7EAAD4', '莫蘭迪藍': '#8CA3B0',
+  '紅': '#C94D4D', '深紅': '#8B2E2E', '正紅': '#D63A3A', '磚紅': '#B85348', '酒紅': '#7B2E3A',
+  '粉': '#E8B4B8', '淺粉': '#F2CFD4', '嫩粉': '#F5D5D5', '珊瑚粉': '#EFA69A', '玫瑰': '#D48090', '莫蘭迪粉': '#D8B4B0', '藕粉': '#D4A8A8',
+  '綠': '#5A7A5A', '軍綠': '#5B6845', '橄欖': '#7A7248', '墨綠': '#3D4E3B', '抹茶': '#A2B487', '薄荷': '#B4D4C0', '莫蘭迪綠': '#8FA894',
   '黃': '#E8C877', '芥末': '#C4A34B', '鵝黃': '#F0D97A', '奶油': '#F5E5B0',
-  '橘': '#E88A5A', '橙': '#E07A3E', '燒橘': '#C6683A',
-  '紫': '#8A6FA0', '淺紫': '#B8A5C4', '深紫': '#5D4770', '薰衣草': '#B5A5C7',
+  '橘': '#E88A5A', '橙': '#E07A3E', '燒橘': '#C6683A', '南瓜': '#D97846',
+  '紫': '#8A6FA0', '淺紫': '#B8A5C4', '深紫': '#5D4770', '薰衣草': '#B5A5C7', '藕紫': '#A88BAA',
   '棕': '#7A5A3A', '深棕': '#5A4028', '淺棕': '#A18868', '巧克力': '#4E3320',
   '咖': '#6B4E3D', '咖啡': '#5D4230', '摩卡': '#7D5F48',
   '杏': '#E8B587', '杏色': '#E8B587', '裸': '#E5C7A5', '裸粉': '#EDCEBB',
@@ -1877,12 +1880,25 @@ const COLOR_MAP = {
   '卡其': '#B8A582', '駝': '#B08961', '駝色': '#B08961', '焦糖': '#A46D3D',
   '金': '#C9A84C', '銀': '#C0C0C0',
   '花': '#E8B587', // 花色 fallback
+  '碎花': '#E8B587', '格紋': '#8B7355', '條紋': '#8B7355',
 };
+
+// 未在 COLOR_MAP 的顏色 → 用名字 hash 生成穩定的顏色（不同名字有不同色，同名穩定）
+function colorFromNameHash(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) {
+    h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+  }
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue}, 35%, 65%)`;
+}
 
 function getColorHex(name) {
   if (!name) return '#E8B587';
-  if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name; // 已經是 hex
-  return COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')] || '#E8B587';
+  if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name;
+  const mapped = COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')];
+  if (mapped) return mapped;
+  return colorFromNameHash(name);
 }
 
 // ============================================================
@@ -2037,8 +2053,14 @@ function cardHtml(p) {
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
   const igIcon = p.link ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
-  const colorsHtml = (p.colors || []).slice(0, 5).map(c => {
-    return `<span class="color-dot" style="background:${getColorHex(c)}" title="${escapeAttr(c)}"></span>`;
+  // 只顯示還有庫存的顏色（售完的過濾掉）
+  const availableColors = getAvailableColors(p).slice(0, 5);
+  const colorsHtml = availableColors.map(c => {
+    const hex = getColorHex(c);
+    // 淺色系（白、米白等）加深一點的 border，不然在白卡片上看不見
+    const isPale = /#[F][A-F0-9]/i.test(hex) || hex === '#FFFFFF';
+    const border = isPale ? 'border:1px solid #c8bfae;' : '';
+    return `<span class="color-dot" style="background:${hex};${border}" title="${escapeAttr(c)}"></span>`;
   }).join('');
 
   return `
