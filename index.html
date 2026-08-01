@@ -1912,14 +1912,56 @@ const COLOR_PATTERNS = {
   '漸層': 'linear-gradient(135deg, #E8B4B8, #B5A5C7)',
 };
 
+// 圖案 + 顏色動態組合（用底色 hex 建構 pattern）
+function buildPattern(patternKey, colorHex) {
+  const base = '#f5efe4'; // 米底當背景
+  const dark = '#2b2621';
+  switch (patternKey) {
+    case '格紋': case '格子':
+      return `repeating-conic-gradient(${colorHex} 0% 25%, ${base} 0% 50%) 50% / 5px 5px`;
+    case '條紋':
+      return `repeating-linear-gradient(45deg, ${colorHex} 0 2.5px, ${base} 2.5px 5px)`;
+    case '直條紋':
+      return `repeating-linear-gradient(90deg, ${colorHex} 0 2.5px, ${base} 2.5px 5px)`;
+    case '橫條紋':
+      return `repeating-linear-gradient(0deg, ${colorHex} 0 2.5px, ${base} 2.5px 5px)`;
+    case '碎花': case '小花': case '花色': case '花':
+      return `radial-gradient(circle at 30% 30%, ${colorHex} 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), ${base}`;
+    case '波點': case '圓點':
+      return `radial-gradient(circle at 50% 50%, ${colorHex} 1.5px, transparent 2px), ${base}`;
+    case '豹紋':
+      return `radial-gradient(ellipse at 30% 30%, ${colorHex} 2px, transparent 2.5px), radial-gradient(ellipse at 70% 70%, ${colorHex} 2px, transparent 2.5px), #C8B291`;
+    case '迷彩':
+      return `radial-gradient(ellipse at 30% 30%, ${colorHex} 2.5px, transparent 3px), radial-gradient(ellipse at 70% 70%, #7A7248 2.5px, transparent 3px), #3D4E3B`;
+  }
+  return COLOR_PATTERNS[patternKey];
+}
+
+// 常見圖案關鍵字（用於偵測「格紋棕」「條紋藍」這種組合）
+const PATTERN_KEYS = ['直條紋', '橫條紋', '海軍條紋', '英式格紋', '格紋', '格子', '條紋', '碎花', '小花', '花色', '波點', '圓點', '豹紋', '迷彩'];
+
 function getColorHex(name) {
   if (!name) return '#E8B587';
   if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name;
-  // 先查圖案（條紋/格紋/花色/...）
-  const pattern = COLOR_PATTERNS[name] || COLOR_PATTERNS[name.replace(/色$/, '')];
-  if (pattern) return pattern;
+  // 1. 先直接查 pattern（單字）
+  const directPattern = COLOR_PATTERNS[name] || COLOR_PATTERNS[name.replace(/色$/, '')];
+  if (directPattern) return directPattern;
+  // 2. 檢查是否為「圖案+顏色」組合（例如「格紋棕」「條紋藍」）
+  for (const key of PATTERN_KEYS) {
+    if (name.includes(key)) {
+      const colorPart = name.replace(key, '').trim();
+      if (colorPart) {
+        const colorHex = COLOR_MAP[colorPart] || COLOR_MAP[colorPart.replace(/色$/, '')];
+        if (colorHex) return buildPattern(key, colorHex);
+      }
+      // 有 pattern 但沒對到顏色 → 用預設 pattern
+      if (COLOR_PATTERNS[key]) return COLOR_PATTERNS[key];
+    }
+  }
+  // 3. 純色 mapping
   const mapped = COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')];
   if (mapped) return mapped;
+  // 4. 都對不到 → 用名字 hash 生成穩定色
   return colorFromNameHash(name);
 }
 
