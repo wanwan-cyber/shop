@@ -1946,7 +1946,28 @@ function getColorHex(name) {
   // 1. 先直接查 pattern（單字）
   const directPattern = COLOR_PATTERNS[name] || COLOR_PATTERNS[name.replace(/色$/, '')];
   if (directPattern) return directPattern;
-  // 2. 檢查是否為「圖案+顏色」組合（例如「格紋棕」「條紋藍」）
+  // 2. 「X底Y條/格/點/花/紋」格式（例：「白底黑條」「黑底白點」「米底粉花」）
+  const composite = name.match(/^(.+?)底(.+?)(條紋|條|格紋|格|點|花|紋)$/);
+  if (composite) {
+    const baseName = composite[1];
+    const patternName = composite[2];
+    const suffix = composite[3];
+    const baseHex = COLOR_MAP[baseName] || COLOR_MAP[baseName.replace(/色$/, '')] || '#f5efe4';
+    const patternHex = COLOR_MAP[patternName] || COLOR_MAP[patternName.replace(/色$/, '')] || '#2b2621';
+    if (suffix === '條' || suffix === '條紋' || suffix === '紋') {
+      return `repeating-linear-gradient(0deg, ${patternHex} 0 2.5px, ${baseHex} 2.5px 5px)`;
+    }
+    if (suffix === '格' || suffix === '格紋') {
+      return `repeating-conic-gradient(${patternHex} 0% 25%, ${baseHex} 0% 50%) 50% / 5px 5px`;
+    }
+    if (suffix === '點') {
+      return `radial-gradient(circle at 50% 50%, ${patternHex} 1.5px, transparent 2px), ${baseHex}`;
+    }
+    if (suffix === '花') {
+      return `radial-gradient(circle at 30% 30%, ${patternHex} 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), ${baseHex}`;
+    }
+  }
+  // 3. 檢查「圖案+顏色」組合（例如「格紋棕」「條紋藍」）
   for (const key of PATTERN_KEYS) {
     if (name.includes(key)) {
       const colorPart = name.replace(key, '').trim();
@@ -1954,14 +1975,13 @@ function getColorHex(name) {
         const colorHex = COLOR_MAP[colorPart] || COLOR_MAP[colorPart.replace(/色$/, '')];
         if (colorHex) return buildPattern(key, colorHex);
       }
-      // 有 pattern 但沒對到顏色 → 用預設 pattern
       if (COLOR_PATTERNS[key]) return COLOR_PATTERNS[key];
     }
   }
-  // 3. 純色 mapping
+  // 4. 純色 mapping
   const mapped = COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')];
   if (mapped) return mapped;
-  // 4. 都對不到 → 用名字 hash 生成穩定色
+  // 5. 都對不到 → 用名字 hash 生成穩定色
   return colorFromNameHash(name);
 }
 
