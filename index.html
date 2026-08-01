@@ -1879,8 +1879,7 @@ const COLOR_MAP = {
   '米': '#EFE0C7', '米色': '#EFE0C7', '燕麥': '#D8CAAD', '奶茶': '#C8B291',
   '卡其': '#B8A582', '駝': '#B08961', '駝色': '#B08961', '焦糖': '#A46D3D',
   '金': '#C9A84C', '銀': '#C0C0C0',
-  '花': '#E8B587', // 花色 fallback
-  '碎花': '#E8B587', '格紋': '#8B7355', '條紋': '#8B7355',
+  '花': '#E8B587', // 花色 fallback（純色 fallback；真正的花色 pattern 在 COLOR_PATTERNS）
 };
 
 // 未在 COLOR_MAP 的顏色 → 用名字 hash 生成穩定的顏色（不同名字有不同色，同名穩定）
@@ -1893,9 +1892,32 @@ function colorFromNameHash(name) {
   return `hsl(${hue}, 35%, 65%)`;
 }
 
+// 圖案：用 CSS gradient 畫出真的條紋/格紋/花紋（比單一色更能表達）
+const COLOR_PATTERNS = {
+  '條紋': 'repeating-linear-gradient(45deg, #2b2621 0 2.5px, #f5efe4 2.5px 5px)',
+  '直條紋': 'repeating-linear-gradient(90deg, #2b2621 0 2.5px, #f5efe4 2.5px 5px)',
+  '橫條紋': 'repeating-linear-gradient(0deg, #2b2621 0 2.5px, #f5efe4 2.5px 5px)',
+  '海軍條紋': 'repeating-linear-gradient(45deg, #2c4770 0 2.5px, #f5efe4 2.5px 5px)',
+  '格紋': 'repeating-conic-gradient(#2b2621 0% 25%, #f5efe4 0% 50%) 50% / 5px 5px',
+  '英式格紋': 'repeating-conic-gradient(#7B2E3A 0% 25%, #2b2621 0% 50%) 50% / 5px 5px',
+  '格子': 'repeating-conic-gradient(#2b2621 0% 25%, #f5efe4 0% 50%) 50% / 5px 5px',
+  '碎花': 'radial-gradient(circle at 30% 30%, #d48090 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), #f5efe4',
+  '小花': 'radial-gradient(circle at 30% 30%, #d48090 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), #f5efe4',
+  '花': 'radial-gradient(circle at 30% 30%, #d48090 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), #f5efe4',
+  '花色': 'radial-gradient(circle at 30% 30%, #d48090 1.5px, transparent 2px), radial-gradient(circle at 70% 70%, #a2b487 1.5px, transparent 2px), #f5efe4',
+  '波點': 'radial-gradient(circle at 50% 50%, #2b2621 1.5px, transparent 2px), #f5efe4',
+  '圓點': 'radial-gradient(circle at 50% 50%, #2b2621 1.5px, transparent 2px), #f5efe4',
+  '豹紋': 'radial-gradient(ellipse at 30% 30%, #5A4028 2px, transparent 2.5px), radial-gradient(ellipse at 70% 70%, #5A4028 2px, transparent 2.5px), #C8B291',
+  '迷彩': 'radial-gradient(ellipse at 30% 30%, #5B6845 2.5px, transparent 3px), radial-gradient(ellipse at 70% 70%, #7A7248 2.5px, transparent 3px), #3D4E3B',
+  '漸層': 'linear-gradient(135deg, #E8B4B8, #B5A5C7)',
+};
+
 function getColorHex(name) {
   if (!name) return '#E8B587';
   if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name;
+  // 先查圖案（條紋/格紋/花色/...）
+  const pattern = COLOR_PATTERNS[name] || COLOR_PATTERNS[name.replace(/色$/, '')];
+  if (pattern) return pattern;
   const mapped = COLOR_MAP[name] || COLOR_MAP[name.replace(/色$/, '')];
   if (mapped) return mapped;
   return colorFromNameHash(name);
@@ -2057,8 +2079,9 @@ function cardHtml(p) {
   const availableColors = getAvailableColors(p).slice(0, 5);
   const colorsHtml = availableColors.map(c => {
     const hex = getColorHex(c);
-    // 淺色系（白、米白等）加深一點的 border，不然在白卡片上看不見
-    const isPale = /#[F][A-F0-9]/i.test(hex) || hex === '#FFFFFF';
+    // 圖案（gradient）不動；純色的淺色系加深 border，不然在白卡片上看不見
+    const isGradient = hex.includes('gradient');
+    const isPale = !isGradient && /^#(F|E)[A-F0-9]/i.test(hex);
     const border = isPale ? 'border:1px solid #c8bfae;' : '';
     return `<span class="color-dot" style="background:${hex};${border}" title="${escapeAttr(c)}"></span>`;
   }).join('');
