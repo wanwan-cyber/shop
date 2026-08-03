@@ -2150,6 +2150,25 @@ main {
   .pants-length-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+.pants-length-shoe-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--text-soft);
+  text-align: center;
+  line-height: 1.4;
+}
+.quick-length-shoe-tip {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-mute);
+  text-align: center;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
 .pants-card-tryon {
   font-size: 13px;
   color: var(--wood);
@@ -4594,7 +4613,7 @@ function suggestPantsLength(lowerBody, height) {
     tip = '各種褲長都適合';
   }
 
-  const cropped = height * 0.55; // 九分褲基準
+  const cropped = height * 0.55; // 九分褲基準（平底鞋）
   const types = [
     { name: '短褲',     cm: Math.round(height * 0.17), desc: '大腿中段' },
     { name: '五分褲',   cm: Math.round(height * 0.30), desc: '膝蓋上方' },
@@ -4909,7 +4928,7 @@ function updateQuickLength() {
     box.innerHTML = '<div class="quick-size-hint">填身高看褲長</div>';
     return;
   }
-  const cropped = h * 0.55;  // 九分褲基準
+  const cropped = h * 0.55;  // 九分褲基準（平底鞋）
   const types = [
     { name: '九分褲',   cm: Math.round(cropped) },
     { name: '蓋過鞋面', cm: Math.round(cropped + 6) },
@@ -4920,7 +4939,7 @@ function updateQuickLength() {
       <span class="quick-length-pill-name">${t.name}</span>
       <span class="quick-length-pill-cm">${t.cm}<span class="quick-length-pill-unit">cm</span></span>
     </div>
-  `).join('');
+  `).join('') + '<div class="quick-length-shoe-tip">👟 平底鞋準｜👠 中／高跟 +5-7cm</div>';
 }
 
 function toggleHint(key) {
@@ -5016,7 +5035,7 @@ function renderResult(result, m) {
       <div class="pants-length-item-cm">${t.cm} <span>cm</span></div>
       <div class="pants-length-item-desc">${t.desc}</div>
     </div>
-  `).join('');
+  `).join('') + '<div class="pants-length-shoe-tip">👟 以平底鞋為基準；穿中跟／高跟時建議 +5-7cm</div>';
 
   // 細部分析
   document.getElementById('detailRows').innerHTML = result.details.map(d => `
