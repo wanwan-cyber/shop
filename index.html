@@ -4569,33 +4569,21 @@ function findQuickSize(waist) {
   return { size: last.size, room: last.waist_flat * 2 - waist, status: roomStatus(-999) };
 }
 
-// 完整估算：三部位剩餘空間分析
+// 完整估算：改用腰圍推薦（跟快速估算一致）
+// 臀圍/大腿圍只保留給身型判斷用，不影響尺碼
 function suggestPantsSize(m) {
-  // 對每個尺碼，算三部位的剩餘空間，取最小值
-  // 最小空間 ≥ 3 才算「穿得下」，找第一個「舒適的」（三部位都 ≥ 5）
-  function analyzeSize(s) {
-    const parts = [
-      { label: '腰圍',   val: m.waist, flat: s.waist_flat, room: s.waist_flat * 2 - m.waist },
-      { label: '臀圍',   val: m.hip,   flat: s.hip_flat,   room: s.hip_flat * 2 - m.hip },
-      { label: '大腿圍', val: m.thigh, flat: s.thigh_flat, room: s.thigh_flat * 2 - m.thigh },
-    ];
-    parts.forEach(p => p.status = roomStatus(p.room));
-    const minRoom = Math.min(...parts.map(p => p.room));
-    return { size: s.size, parts, minRoom };
-  }
-
-  // 找第一個「三部位剩餘空間都 ≥ 5」的（全舒適）
-  for (const s of PANTS_SIZES_FLAT) {
-    const a = analyzeSize(s);
-    if (a.minRoom >= 5) return a;
-  }
-  // 找第一個「三部位都 ≥ 3」的（偏合但穿得下）
-  for (const s of PANTS_SIZES_FLAT) {
-    const a = analyzeSize(s);
-    if (a.minRoom >= 3) return a;
-  }
-  // 兜底回最大碼
-  return analyzeSize(PANTS_SIZES_FLAT[PANTS_SIZES_FLAT.length - 1]);
+  const q = findQuickSize(m.waist);
+  const s = PANTS_SIZES_FLAT.find(x => x.size === q.size);
+  return {
+    size: q.size,
+    parts: [{
+      label: '腰圍',
+      val: m.waist,
+      flat: s.waist_flat,
+      room: q.room,
+      status: q.status,
+    }],
+  };
 }
 
 // 褲長建議：依身高（Wan 公式：九分褲 = 身高 × 0.55）+ 下半身長判斷腿型
