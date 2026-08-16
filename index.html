@@ -2835,15 +2835,19 @@ function getFilteredProducts() {
     const q = currentSearch.toLowerCase();
     list = list.filter(p => (p.name || '').toLowerCase().includes(q));
   }
-  // 排序：售完最後、在售且 7 天內上架的排最前、其他按價格低到高
+  // 排序：售完最後、強推最前、7 天內新品次之、其他按價格
   const NEW_DAYS = 7;
   const newCutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
   list.sort((a, b) => {
     const aOut = (a.stock || 0) <= 0 ? 1 : 0;
     const bOut = (b.stock || 0) <= 0 ? 1 : 0;
     if (aOut !== bOut) return aOut - bOut; // 有庫存在前
-    // 都有庫存 → 檢查是不是新品
     if (!aOut && !bOut) {
+      // ⭐ 強推最優先
+      const aFeat = a.featured === true ? 1 : 0;
+      const bFeat = b.featured === true ? 1 : 0;
+      if (aFeat !== bFeat) return bFeat - aFeat;
+      // 都是強推 or 都不是強推 → 檢查新品
       const aNew = (a.createdAt || 0) >= newCutoff ? 1 : 0;
       const bNew = (b.createdAt || 0) >= newCutoff ? 1 : 0;
       if (aNew !== bNew) return bNew - aNew; // 新品在前
