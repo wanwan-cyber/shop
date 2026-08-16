@@ -3387,6 +3387,31 @@ function saveOrdersBulk(newOrders) {
   return result;
 }
 
+// 🩹 對帳：從本地移除雲端不存在的訂單（例如商家在 POS 刪掉的測試單）
+// 呼叫時機：任何從雲端拿到完整訂單清單之後
+// 回傳：移除的訂單數量
+function reconcileLocalOrders(serverOrders) {
+  try {
+    const raw = localStorage.getItem(ORDERS_KEY);
+    if (!raw) return 0;
+    const orders = JSON.parse(raw);
+    const serverIds = new Set((serverOrders || []).map(o => o.orderNo));
+    let removed = 0;
+    Object.keys(orders).forEach(orderNo => {
+      if (!serverIds.has(orderNo)) {
+        delete orders[orderNo];
+        removed++;
+      }
+    });
+    if (removed > 0) {
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    }
+    return removed;
+  } catch (e) {
+    return 0;
+  }
+}
+
 function getOrderLocal(orderNo) {
   try {
     const raw = localStorage.getItem(ORDERS_KEY);
@@ -4213,13 +4238,19 @@ async function searchOrdersByPhone() {
     const foundOrders = data.orders || [];
     // 🛟 批次寫入，避免迴圈 setItem 拖慢速度
     const { added: newCount } = saveOrdersBulk(foundOrders);
+    // 🩹 對帳：移除本地有、雲端已經沒有的訂單
+    const removedCount = reconcileLocalOrders(foundOrders);
     // ★ 記住這支電話（之後打開網站自動同步）
     saveMyPhone(phone);
     hideLoading();
-    if (foundOrders.length === 0) {
+    if (foundOrders.length === 0 && removedCount === 0) {
       toast(`此手機號碼下沒有訂單`);
     } else {
-      toast(newCount > 0 ? `找到 ${foundOrders.length} 筆訂單，${newCount} 筆新加入 ✓` : `已同步 ${foundOrders.length} 筆訂單`);
+      const parts = [];
+      if (newCount > 0) parts.push(`${newCount} 筆新加入`);
+      if (removedCount > 0) parts.push(`移除 ${removedCount} 筆已刪除`);
+      const suffix = parts.length ? '，' + parts.join('、') + ' ✓' : '';
+      toast(foundOrders.length > 0 ? `已同步 ${foundOrders.length} 筆訂單${suffix}` : `移除 ${removedCount} 筆已刪除訂單 ✓`);
     }
     updateMyOrdersBadge();
     renderMyOrders();
@@ -4244,13 +4275,16 @@ async function autoSyncOrders(silent) {
     const foundOrders = data.orders || [];
     // 🛟 批次寫入 + 統計
     const { added: newCount, statusChanged } = saveOrdersBulk(foundOrders);
+    // 🩹 對帳：移除本地有、雲端已經沒有的訂單（例如商家在 POS 刪掉的測試單）
+    const removedCount = reconcileLocalOrders(foundOrders);
     updateMyOrdersBadge();
     // 如果目前在我的訂單頁，重新 render
     if (location.hash === '#/orders') renderMyOrders();
-    if (!silent && (newCount > 0 || statusChanged > 0)) {
+    if (!silent && (newCount > 0 || statusChanged > 0 || removedCount > 0)) {
       const msgs = [];
       if (newCount > 0) msgs.push(`${newCount} 筆新訂單`);
       if (statusChanged > 0) msgs.push(`${statusChanged} 筆狀態更新`);
+      if (removedCount > 0) msgs.push(`移除 ${removedCount} 筆已刪除訂單`);
       toast('已同步：' + msgs.join('、'));
     }
   } catch (err) {
