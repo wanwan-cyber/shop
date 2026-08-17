@@ -3095,6 +3095,9 @@ function showDetail(product) {
   selectedSize = null;
   selectedImageIdx = 0;
 
+  // 📊 通知後端 +1 觀看數（只給 POS 看，客人自己看不到）
+  trackProductView(product.id);
+
   // 有貨的顏色（自動隱藏售完顏色）
   const availableColors = getAvailableColors(product);
   const availableSizes = getAvailableSizes(product, null);
@@ -3105,6 +3108,19 @@ function showDetail(product) {
   if (sizesForSelectedColor.length > 0) selectedSize = sizesForSelectedColor[0];
 
   renderDetail();
+}
+
+// 📊 觀看數追蹤：fire-and-forget、失敗也不影響客人體驗
+function trackProductView(productId) {
+  if (!productId || !APPS_SCRIPT_URL) return;
+  try {
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'trackView', productId: productId }),
+      // 用 no-cors + text/plain 避免 CORS preflight 拖慢
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    }).catch(() => {}); // 靜默失敗
+  } catch (e) { /* 靜默失敗 */ }
 }
 
 function renderDetail() {
