@@ -2992,6 +2992,10 @@ function clearAllFilters() {
 // ============================================================
 // ★ M3+M4 Hash Routing
 // ============================================================
+// 記住商品列表的捲動位置，從詳情頁返回時還原（避免每次都跳回最上面）
+let listScrollY = 0;
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 function handleRoute() {
   const hash = location.hash;
   const listEl = document.getElementById('pageList');
@@ -3004,6 +3008,12 @@ function handleRoute() {
   // 📄 離開商品詳情頁 → 回復預設分頁標題
   if (!hash.startsWith('#/product/')) {
     document.title = 'WANWAN SELECTED';
+  }
+
+  // ★ 離開列表前先記住捲動位置（下次回列表時還原）
+  const listWasVisible = !listEl.classList.contains('hidden');
+  if (listWasVisible) {
+    listScrollY = window.scrollY;
   }
 
   // 全部隱藏後再顯示指定頁
@@ -3084,6 +3094,10 @@ function handleRoute() {
   listEl.classList.remove('hidden');
   detailEl.innerHTML = '';
   currentProduct = null;
+  // ★ 從詳情頁/其他頁返回時，還原之前的捲動位置（等 layout 更新完再捲）
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: listScrollY, behavior: 'instant' });
+  });
 }
 
 // ============================================================
