@@ -2713,6 +2713,133 @@ function buildPattern(patternKey, colorHex) {
 // 常見圖案關鍵字（用於偵測「格紋棕」「條紋藍」這種組合）
 const PATTERN_KEYS = ['直條紋', '橫條紋', '海軍條紋', '英式格紋', '格紋', '格子', '條紋', '碎花', '小花', '花色', '波點', '圓點', '豹紋', '迷彩'];
 
+// ============================================================
+// 材質特性字典 + 描述卡片產生器
+// 把 POS 存的英文材質字串（例：「65% COTTON 35% POLYESTER」）
+// 轉成有溫度的中文面料介紹，顯示在商品詳情頁
+// ============================================================
+const MATERIAL_INFO = {
+  COTTON:    { zh: '棉',       title: '舒適棉感面料',   trait: '柔軟親膚、透氣吸汗',       closing: '日常穿搭舒適自在。' },
+  POLYESTER: { zh: '聚酯纖維', title: '耐穿好整理面料', trait: '耐穿不易皺、快乾好整理',   closing: '洗滌保養都輕鬆。' },
+  NYLON:     { zh: '尼龍',     title: '輕盈耐磨面料',   trait: '輕盈耐磨、強韌不易變形',   closing: '兼具強度與舒適。' },
+  SPANDEX:   { zh: '彈性纖維', title: '高彈力舒適面料', trait: '延展性佳、貼合身形',       closing: '好活動又不緊繃。' },
+  ELASTANE:  { zh: '彈性纖維', title: '高彈力舒適面料', trait: '延展性佳、貼合身形',       closing: '好活動又不緊繃。' },
+  RAYON:     { zh: '嫘縈',     title: '涼感垂墜面料',   trait: '垂墜感佳、觸感涼順',       closing: '穿起來優雅有型。' },
+  VISCOSE:   { zh: '黏膠纖維', title: '涼感垂墜面料',   trait: '垂墜感佳、觸感涼順',       closing: '穿起來優雅有型。' },
+  WOOL:      { zh: '羊毛',     title: '溫暖羊毛面料',   trait: '天然保暖、觸感溫柔',       closing: '陪妳度過每個涼意時刻。' },
+  LINEN:     { zh: '亞麻',     title: '清爽亞麻面料',   trait: '涼爽透氣、自然質感',       closing: '夏日穿搭首選。' },
+  SILK:      { zh: '真絲',     title: '奢華絲質面料',   trait: '光澤細膩、觸感親膚',       closing: '展現優雅高級氣質。' },
+  ACRYLIC:   { zh: '壓克力纖維', title: '蓬鬆保暖面料', trait: '蓬鬆保暖、類羊毛觸感',     closing: '兼具溫暖與好整理。' },
+  MODAL:     { zh: '莫代爾',   title: '親膚舒適面料',   trait: '柔軟親膚、吸濕透氣',       closing: '長時間穿著也不悶熱。' },
+  TENCEL:    { zh: '天絲',     title: '天絲親膚面料',   trait: '涼感親膚、環保永續',       closing: '兼具舒適與時尚態度。' },
+  CASHMERE:  { zh: '羊絨',     title: '頂級羊絨面料',   trait: '極致柔軟、輕盈保暖',       closing: '呈現優雅奢華的質感。' },
+  ACETATE:   { zh: '醋酸纖維', title: '光澤垂墜面料',   trait: '光澤感佳、垂墜有型',       closing: '穿起來端莊優雅。' },
+  CUPRO:     { zh: '銅氨纖維', title: '絲滑涼感面料',   trait: '絲滑觸感、涼感親膚',       closing: '如絲般的高級穿感。' },
+};
+
+// 常見別名 → 統一 key
+const MATERIAL_ALIASES = {
+  POLYAMIDE: 'NYLON',
+  LYCRA:     'SPANDEX',
+  LYOCELL:   'TENCEL',
+};
+
+// 解析材質字串（支援「60% COTTON」與「COTTON 60%」兩種格式）
+function parseShopMaterial(str) {
+  const parts = [];
+  const seen = new Set();
+  if (!str) return parts;
+  const re1 = /(\d+)\s*%\s*([A-Za-z][A-Za-z\-]*)/g;
+  let m;
+  while ((m = re1.exec(str)) !== null) {
+    const key = (MATERIAL_ALIASES[m[2].toUpperCase()] || m[2].toUpperCase());
+    if (!seen.has(key)) { parts.push({ name: key, pct: parseInt(m[1]) }); seen.add(key); }
+  }
+  const re2 = /([A-Za-z][A-Za-z\-]*)\s+(\d+)\s*%/g;
+  while ((m = re2.exec(str)) !== null) {
+    const key = (MATERIAL_ALIASES[m[1].toUpperCase()] || m[1].toUpperCase());
+    if (!seen.has(key)) { parts.push({ name: key, pct: parseInt(m[2]) }); seen.add(key); }
+  }
+  return parts;
+}
+
+// 產生完整材質卡片 HTML（含標題、原文標籤、中文特性描述）
+// str      = 原始成分字串（例：「65% COTTON 35% POLYESTER」）
+// manual   = POS 端手寫的材質分析（有值 → 直接顯示，不用自動組句）
+function generateMaterialCard(str, manual) {
+  const hasStr = !!(str && str.trim());
+  const hasManual = !!(manual && manual.trim());
+  // 兩個都沒有 → 整塊不顯示
+  if (!hasStr && !hasManual) return '';
+
+  // 只有手動文案、沒有成分 → 純文字卡（不做成分解析）
+  if (!hasStr && hasManual) {
+    return `
+      <div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg, var(--cream-2) 0%, var(--cream-3) 100%);border:1px solid var(--apricot-soft);border-radius:14px;">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:800;color:var(--wood);font-size:14px;letter-spacing:.5px;margin-bottom:8px;">
+          <span>✨</span><span>面料介紹</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-soft);line-height:1.75;white-space:pre-wrap;">${escapeHtml(manual)}</div>
+      </div>
+    `;
+  }
+
+  const parts = parseShopMaterial(str);
+  // 完全解析不出來 → 保守顯示原字串（+ 手動 desc 若有）
+  if (parts.length === 0) {
+    return `
+      <div style="margin-top:14px;padding:12px 14px;background:var(--cream-2);border-radius:12px;">
+        <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:4px;">材質</div>
+        <div style="font-size:13px;color:var(--text-soft);line-height:1.6;">${escapeHtml(str)}</div>
+        ${hasManual ? `<div style="margin-top:8px;font-size:13px;color:var(--text-soft);line-height:1.75;white-space:pre-wrap;">${escapeHtml(manual)}</div>` : ''}
+      </div>
+    `;
+  }
+  parts.sort((a, b) => b.pct - a.pct);
+
+  const dominant = parts[0];
+  const dominantInfo = MATERIAL_INFO[dominant.name];
+
+  // 中文成分（例：「65% 棉、35% 聚酯纖維」）
+  const zhComp = parts.map(p => {
+    const info = MATERIAL_INFO[p.name];
+    const label = info ? info.zh : escapeHtml(p.name);
+    return `${p.pct}% ${label}`;
+  }).join('、');
+
+  const title = dominantInfo ? dominantInfo.title : '面料介紹';
+
+  // body：有手動就用手動（純文字，保留換行）；否則走自動組句
+  let body;
+  if (hasManual) {
+    body = escapeHtml(manual);
+  } else {
+    body = `採用 <strong style="color:var(--wood);">${zhComp}</strong> 製成`;
+    if (dominantInfo && dominantInfo.trait) {
+      body += `，保有${dominantInfo.zh}的${dominantInfo.trait}特性`;
+    }
+    const second = parts.length >= 2 ? MATERIAL_INFO[parts[1].name] : null;
+    if (second && second.trait) {
+      body += `，同時兼具${second.zh}的${second.trait}`;
+    }
+    const third = parts.length >= 3 ? MATERIAL_INFO[parts[2].name] : null;
+    if (third) {
+      body += `，並加入${third.zh}提升整體質感`;
+    }
+    body += `,${(dominantInfo && dominantInfo.closing) || '打造舒適的穿著體驗。'}`;
+  }
+
+  return `
+    <div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg, var(--cream-2) 0%, var(--cream-3) 100%);border:1px solid var(--apricot-soft);border-radius:14px;">
+      <div style="display:flex;align-items:center;gap:6px;font-weight:800;color:var(--wood);font-size:14px;letter-spacing:.5px;margin-bottom:6px;">
+        <span>✨</span><span>${escapeHtml(title)}</span>
+      </div>
+      <div style="font-family:monospace;font-size:11px;color:var(--text-mute);letter-spacing:.6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed var(--apricot-soft);">${escapeHtml(str)}</div>
+      <div style="font-size:13px;color:var(--text-soft);line-height:1.75;${hasManual ? 'white-space:pre-wrap;' : ''}">${body}</div>
+    </div>
+  `;
+}
+
 function getColorHex(name) {
   if (!name) return '#E8B587';
   if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name;
@@ -2826,9 +2953,15 @@ function getFilteredProducts() {
   let list = allProducts.slice();
   // 只顯示已上架
   list = list.filter(p => p.onlineShop === true);
-  // 分類篩選
-  if (currentCat && currentCat !== '全部') {
-    list = list.filter(p => p.cat === currentCat);
+  // 🛍 預購 tab：只顯示預購品；其他 tab：排除預購品
+  if (currentCat === '🛍 預購') {
+    list = list.filter(p => p.preorder === true);
+  } else {
+    list = list.filter(p => p.preorder !== true);
+    // 分類篩選
+    if (currentCat && currentCat !== '全部') {
+      list = list.filter(p => p.cat === currentCat);
+    }
   }
   // 搜尋
   if (currentSearch) {
@@ -2839,8 +2972,9 @@ function getFilteredProducts() {
   const NEW_DAYS = 7;
   const newCutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
   list.sort((a, b) => {
-    const aOut = (a.stock || 0) <= 0 ? 1 : 0;
-    const bOut = (b.stock || 0) <= 0 ? 1 : 0;
+    // 預購品當作永遠有貨（不會被推到最後面）
+    const aOut = (a.preorder ? false : (a.stock || 0) <= 0) ? 1 : 0;
+    const bOut = (b.preorder ? false : (b.stock || 0) <= 0) ? 1 : 0;
     if (aOut !== bOut) return aOut - bOut; // 有庫存在前
     if (!aOut && !bOut) {
       // ⭐ 強推最優先
@@ -2862,7 +2996,11 @@ function getFilteredProducts() {
 // 分類 chip 產生
 // ============================================================
 function renderCatBar() {
-  const cats = ['全部', ...new Set(allProducts.filter(p => p.onlineShop).map(p => p.cat).filter(Boolean))];
+  const onShelf = allProducts.filter(p => p.onlineShop);
+  const hasPreorder = onShelf.some(p => p.preorder === true);
+  const cats = ['全部'];
+  if (hasPreorder) cats.push('🛍 預購');
+  cats.push(...new Set(onShelf.filter(p => p.preorder !== true).map(p => p.cat).filter(Boolean)));
   const bar = document.getElementById('catBar');
   bar.innerHTML = cats.map(c =>
     `<button class="cat-chip ${c === currentCat ? 'active' : ''}" onclick="setCat('${c.replace(/'/g, "\\'")}')">${c}</button>`
@@ -2916,12 +3054,14 @@ function renderProducts() {
 }
 
 function cardHtml(p) {
-  const soldOut = (p.stock || 0) <= 0;
+  const isPreorder = p.preorder === true;
+  const soldOut = isPreorder ? false : (p.stock || 0) <= 0;
   const img = (p.images && p.images[0]) || p.image || '';
   const imgHtml = img
     ? `<img class="card-image" src="${thumb(img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👗</div>'">`
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
+  const preorderBadge = isPreorder ? `<div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:2;box-shadow:0 2px 6px rgba(139,111,71,.3);">🛍 預購</div>` : '';
   const igIcon = p.link ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
   // 只顯示還有庫存的顏色（售完的過濾掉）
   const availableColors = getAvailableColors(p).slice(0, 5);
@@ -2936,7 +3076,7 @@ function cardHtml(p) {
 
   return `
     <article class="product-card ${soldOut ? 'sold-out' : ''}" onclick="openProduct('${p.id}')">
-      <div class="card-image-wrap">${soldBadge}${igIcon}${imgHtml}</div>
+      <div class="card-image-wrap">${soldBadge}${preorderBadge}${igIcon}${imgHtml}</div>
       <div class="card-body">
         <div class="card-colors">${colorsHtml}</div>
         <div class="card-name">${escapeHtml(p.name || '未命名商品')}</div>
@@ -3146,7 +3286,8 @@ function renderDetail() {
 
   const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
   const mainImg = images[selectedImageIdx];
-  const soldOutAll = (p.stock || 0) <= 0;
+  const isPreorder = p.preorder === true;
+  const soldOutAll = isPreorder ? false : (p.stock || 0) <= 0;
 
   const availableColors = getAvailableColors(p);
   const sizesForColor = getAvailableSizes(p, selectedColor);
@@ -3184,7 +3325,7 @@ function renderDetail() {
       </div>
       <div class="detail-info">
         ${p.cat ? `<div class="detail-cat">${escapeHtml(p.cat)}</div>` : ''}
-        <h1 class="detail-name">${escapeHtml(p.name || '')}</h1>
+        <h1 class="detail-name">${escapeHtml(p.name || '')}${isPreorder ? '<span style="display:inline-block;margin-left:8px;padding:3px 8px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;border-radius:6px;vertical-align:middle;">🛍 預購</span>' : ''}</h1>
         <div class="detail-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
 
         ${p.link ? `
@@ -3194,12 +3335,7 @@ function renderDetail() {
           </a>
         ` : ''}
 
-        ${p.material ? `
-          <div style="margin-top:14px;padding:10px 14px;background:var(--cream-2);border-radius:10px;font-size:13px;line-height:1.6;">
-            <span style="font-weight:700;color:var(--text);">材質</span>
-            <span style="margin-left:10px;color:var(--text-soft);">${escapeHtml(p.material)}</span>
-          </div>
-        ` : ''}
+        ${(p.material || p.materialDesc) ? generateMaterialCard(p.material, p.materialDesc) : ''}
 
         ${availableColors.length > 0 ? `
           <div class="variant-section">
@@ -3240,10 +3376,10 @@ function renderDetail() {
               <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="${variantStock || 1}" onchange="onQtyInput(this)">
               <button class="qty-btn" onclick="changeQty(1)" id="qtyInc">+</button>
             </div>
-            <div class="qty-stock" id="stockHint">庫存 ${variantStock} 件</div>
+            <div class="qty-stock" id="stockHint">${isPreorder ? '🛍 接受預購中（到貨後通知）' : `庫存 ${variantStock} 件`}</div>
           </div>
           <button class="add-to-cart-btn" id="addBtn" onclick="handleAddToCart()" ${(!selectedColor || !selectedSize || variantStock <= 0) ? 'disabled' : ''}>
-            ${(!selectedColor || !selectedSize) ? '請選擇規格' : (variantStock <= 0 ? '此規格售完' : '加入購物車 🛒')}
+            ${(!selectedColor || !selectedSize) ? '請選擇規格' : (variantStock <= 0 ? '此規格售完' : (isPreorder ? '🛍 加入預購' : '加入購物車 🛒'))}
           </button>
         ` : `
           <div style="padding:20px;background:var(--cream-2);border-radius:12px;text-align:center;color:var(--text-soft);font-size:13px;">
@@ -3260,6 +3396,8 @@ function renderDetail() {
 // ============================================================
 function getVariantStock(product, color, size) {
   if (!product) return 0;
+  // ★ 預購商品：不看庫存，一律當作有無限量（實際扣庫存交給店家後續處理）
+  if (product.preorder === true) return 999;
   if (!product.stockMap) return product.stock || 0;
   const key = `${color || ''}|${size || ''}`;
   const n = product.stockMap[key];
