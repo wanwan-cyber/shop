@@ -2953,8 +2953,8 @@ function getFilteredProducts() {
   let list = allProducts.slice();
   // 只顯示已上架
   list = list.filter(p => p.onlineShop === true);
-  // 🛍 預購 tab：只顯示預購品；其他 tab：排除預購品
-  if (currentCat === '🛍 預購') {
+  // 🎀 預購 tab：只顯示預購品；其他 tab：排除預購品
+  if (currentCat === '預購') {
     list = list.filter(p => p.preorder === true);
   } else {
     list = list.filter(p => p.preorder !== true);
@@ -2993,18 +2993,34 @@ function getFilteredProducts() {
 }
 
 // ============================================================
+// 🎀 預購緞帶圖示（手繪感 SVG，全站共用）
+// 用法：${ribbonIcon(14)} — 大小可自訂，顏色跟隨父層 currentColor
+// ============================================================
+function ribbonIcon(size = 14, strokeWidth = 1.7) {
+  return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;flex-shrink:0;">
+    <path d="M14 14 Q6 10, 5 15 Q5 20, 14 18"/>
+    <path d="M18 14 Q26 10, 27 15 Q27 20, 18 18"/>
+    <ellipse cx="16" cy="16" rx="2" ry="2.5"/>
+    <path d="M14 18 Q12 22, 11 26 L13 25 L12 27"/>
+    <path d="M18 18 Q20 22, 21 26 L19 25 L20 27"/>
+  </svg>`;
+}
+
+// ============================================================
 // 分類 chip 產生
 // ============================================================
 function renderCatBar() {
   const onShelf = allProducts.filter(p => p.onlineShop);
   const hasPreorder = onShelf.some(p => p.preorder === true);
   const cats = ['全部'];
-  if (hasPreorder) cats.push('🛍 預購');
+  if (hasPreorder) cats.push('預購'); // 內部識別符，chip 顯示會加緞帶 icon
   cats.push(...new Set(onShelf.filter(p => p.preorder !== true).map(p => p.cat).filter(Boolean)));
   const bar = document.getElementById('catBar');
-  bar.innerHTML = cats.map(c =>
-    `<button class="cat-chip ${c === currentCat ? 'active' : ''}" onclick="setCat('${c.replace(/'/g, "\\'")}')">${c}</button>`
-  ).join('');
+  bar.innerHTML = cats.map(c => {
+    const isPreorder = c === '預購';
+    const label = isPreorder ? `${ribbonIcon(13, 1.8)}<span style="margin-left:5px;">預購</span>` : c;
+    return `<button class="cat-chip ${c === currentCat ? 'active' : ''}" onclick="setCat('${c.replace(/'/g, "\\'")}')">${label}</button>`;
+  }).join('');
 }
 
 function setCat(cat) {
@@ -3061,7 +3077,7 @@ function cardHtml(p) {
     ? `<img class="card-image" src="${thumb(img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👗</div>'">`
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
-  const preorderBadge = isPreorder ? `<div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:2;box-shadow:0 2px 6px rgba(139,111,71,.3);">🛍 預購</div>` : '';
+  const preorderBadge = isPreorder ? `<div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:2;box-shadow:0 2px 6px rgba(139,111,71,.3);display:inline-flex;align-items:center;gap:4px;">${ribbonIcon(11, 1.9)}<span>預購</span></div>` : '';
   const igIcon = p.link ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
   // 只顯示還有庫存的顏色（售完的過濾掉）
   const availableColors = getAvailableColors(p).slice(0, 5);
@@ -3325,7 +3341,7 @@ function renderDetail() {
       </div>
       <div class="detail-info">
         ${p.cat ? `<div class="detail-cat">${escapeHtml(p.cat)}</div>` : ''}
-        <h1 class="detail-name">${escapeHtml(p.name || '')}${isPreorder ? '<span style="display:inline-block;margin-left:8px;padding:3px 8px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;border-radius:6px;vertical-align:middle;">🛍 預購</span>' : ''}</h1>
+        <h1 class="detail-name">${escapeHtml(p.name || '')}${isPreorder ? `<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:3px 9px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;font-size:11px;font-weight:800;letter-spacing:.5px;border-radius:6px;vertical-align:middle;">${ribbonIcon(12, 1.9)}<span>預購</span></span>` : ''}</h1>
         <div class="detail-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
 
         ${p.link ? `
@@ -3376,14 +3392,23 @@ function renderDetail() {
               <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="${variantStock || 1}" onchange="onQtyInput(this)">
               <button class="qty-btn" onclick="changeQty(1)" id="qtyInc">+</button>
             </div>
-            <div class="qty-stock" id="stockHint">${isPreorder ? '🛍 接受預購中（到貨後通知）' : `庫存 ${variantStock} 件`}</div>
+            <div class="qty-stock" id="stockHint" style="${isPreorder ? 'display:inline-flex;align-items:center;gap:5px;color:#8B6F47;' : ''}">${isPreorder ? `${ribbonIcon(13, 1.8)}<span>接受預購中</span>` : `庫存 ${variantStock} 件`}</div>
           </div>
           <button class="add-to-cart-btn" id="addBtn" onclick="handleAddToCart()" ${(!selectedColor || !selectedSize || variantStock <= 0) ? 'disabled' : ''}>
-            ${(!selectedColor || !selectedSize) ? '請選擇規格' : (variantStock <= 0 ? '此規格售完' : (isPreorder ? '🛍 加入預購' : '加入購物車 🛒'))}
+            ${(!selectedColor || !selectedSize) ? '請選擇規格' : (variantStock <= 0 ? '此規格售完' : (isPreorder ? `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">${ribbonIcon(15, 1.8)}<span>加入預購</span></span>` : '加入購物車 🛒'))}
           </button>
+          ${isPreorder ? `
+            <div style="margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(139,111,71,.08),rgba(139,111,71,.02));border:1px dashed rgba(139,111,71,.4);border-radius:10px;font-size:12.5px;color:var(--text-soft);line-height:1.75;">
+              <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#8B6F47;margin-bottom:6px;">
+                ${ribbonIcon(14, 1.6)}<span>預購須知</span>
+              </div>
+              約 <strong style="color:var(--wood);">15-30 天</strong> 到貨,收到貨後會立刻通知您出貨。<br>
+              <span style="font-size:11.5px;color:var(--text-mute);">實際到貨時間依廠商出貨為準,如有變動會提早告知您 🤎</span>
+            </div>
+          ` : ''}
         ` : `
           <div style="padding:20px;background:var(--cream-2);border-radius:12px;text-align:center;color:var(--text-soft);font-size:13px;">
-            商品目前售完，歡迎透過 LINE 詢問補貨資訊
+            商品目前售完,歡迎透過 LINE 詢問補貨資訊
           </div>
         `}
       </div>
