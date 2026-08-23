@@ -600,13 +600,23 @@ main {
 
 .detail-main-image {
   width: 100%;
-  aspect-ratio: 1 / 1;
   background: var(--cream-2);
   border-radius: 16px;
   overflow: hidden;
   position: relative;
+  /* 不強制 aspect-ratio，讓照片依原比例顯示（不會被截切）*/
+  min-height: 320px; /* 避免載入前 layout shift */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.detail-main-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.detail-main-image img {
+  max-width: 100%;
+  max-height: 85vh; /* 上限：不吃掉整個手機螢幕，讓客人還看得到下方顏色/尺寸/CTA */
+  width: auto;
+  height: auto;
+  display: block;
+}
 
 .detail-sold-badge {
   position: absolute;
@@ -2981,6 +2991,12 @@ function getFilteredProducts() {
       const aFeat = a.featured === true ? 1 : 0;
       const bFeat = b.featured === true ? 1 : 0;
       if (aFeat !== bFeat) return bFeat - aFeat;
+      // 都是強推 → 用 POS 端設定的 featuredOrder（小的在前，沒設的排最後）
+      if (aFeat && bFeat) {
+        const aOrd = a.featuredOrder ?? Infinity;
+        const bOrd = b.featuredOrder ?? Infinity;
+        if (aOrd !== bOrd) return aOrd - bOrd;
+      }
       // 都是強推 or 都不是強推 → 檢查新品
       const aNew = (a.createdAt || 0) >= newCutoff ? 1 : 0;
       const bNew = (b.createdAt || 0) >= newCutoff ? 1 : 0;
