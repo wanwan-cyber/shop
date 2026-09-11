@@ -2998,6 +2998,32 @@ async function loadProducts() {
 }
 
 // ============================================================
+// 🏷️ 標籤顏色：從 Apps Script 拉最新設定（POS 端可改）
+// ============================================================
+async function loadTagColors() {
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getTagColors&_t=${Date.now()}`);
+    const data = await res.json();
+    if (data && data.ok && Array.isArray(data.tags) && data.tags.length > 0) {
+      // 從預設開始 → 用雲端設定覆蓋（雲端沒設定的 tag 名稱依舊用預設色）
+      const merged = { ...SHOP_TAG_COLORS_DEFAULT };
+      data.tags.forEach(t => {
+        if (t && t.name && t.color) merged[t.name] = t.color;
+      });
+      SHOP_TAG_COLORS = merged;
+      // 已經 render 過的商品卡片重新繪製，讓顏色即時套用
+      if (typeof render === 'function') {
+        try { render(); } catch(e) {}
+      }
+    }
+  } catch (err) {
+    // 靜默失敗，用預設色即可
+    console.warn('無法載入標籤顏色，改用預設', err);
+  }
+}
+
+// ============================================================
 // 篩選 + 排序
 // ============================================================
 function getFilteredProducts() {
@@ -3056,13 +3082,16 @@ function getFilteredProducts() {
 // ============================================================
 // 🏷️ 商品標籤色卡（跟 POS 端 PM_DEFAULT_TAGS 對應）
 // ============================================================
-const SHOP_TAG_COLORS = {
+// 標籤預設顏色（沒設定或雲端載入失敗時的備援）
+const SHOP_TAG_COLORS_DEFAULT = {
   '新品':   '#7BA482',
   '限量':   '#C87879',
   '熱銷':   '#D49768',
   '補貨中': '#7E92A8',
   '精選':   '#A683B0',
 };
+// 目前使用中的標籤顏色 map（初始化為預設，會被 loadTagColors() 覆蓋）
+let SHOP_TAG_COLORS = { ...SHOP_TAG_COLORS_DEFAULT };
 function tagColor(name) { return SHOP_TAG_COLORS[name] || '#8B6F47'; }
 
 // 商品卡的標籤 badges（右上、垂直堆疊、最多顯示 3 個）
@@ -4710,6 +4739,8 @@ loadProducts().then(() => {
 });
 // ★ 載入首頁 Banner
 loadBanners();
+// ★ 載入標籤顏色（POS 端可改，官網跟著變）
+loadTagColors();
 
 // ============================================================
 // ★ 首頁 Hero Banner 輪播
