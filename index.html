@@ -3053,6 +3053,35 @@ function getFilteredProducts() {
 // 🎀 預購緞帶圖示（手繪感 SVG，全站共用）
 // 用法：${ribbonIcon(14)} — 大小可自訂，顏色跟隨父層 currentColor
 // ============================================================
+// ============================================================
+// 🏷️ 商品標籤色卡（跟 POS 端 PM_DEFAULT_TAGS 對應）
+// ============================================================
+const SHOP_TAG_COLORS = {
+  '新品':   '#7BA482',
+  '限量':   '#C87879',
+  '熱銷':   '#D49768',
+  '補貨中': '#7E92A8',
+  '精選':   '#A683B0',
+};
+function tagColor(name) { return SHOP_TAG_COLORS[name] || '#8B6F47'; }
+
+// 商品卡的標籤 badges（右上、垂直堆疊、最多顯示 3 個）
+function renderCardTags(tags) {
+  if (!Array.isArray(tags) || !tags.length) return '';
+  const show = tags.slice(0, 3);
+  return `<div style="position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:2;">
+    ${show.map(t => `<div style="background:${tagColor(t)};color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.3px;box-shadow:0 2px 6px rgba(0,0,0,.15);white-space:nowrap;">${escapeHtml(t)}</div>`).join('')}
+  </div>`;
+}
+
+// 詳情頁的標籤（大顆一點、水平排）
+function renderDetailTags(tags) {
+  if (!Array.isArray(tags) || !tags.length) return '';
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;">
+    ${tags.map(t => `<span style="display:inline-flex;align-items:center;padding:4px 10px;background:${tagColor(t)};color:#fff;border-radius:12px;font-size:12px;font-weight:700;">${escapeHtml(t)}</span>`).join('')}
+  </div>`;
+}
+
 function ribbonIcon(size = 14, strokeWidth = 1.7) {
   return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;flex-shrink:0;">
     <path d="M14 14 Q6 10, 5 15 Q5 20, 14 18"/>
@@ -3149,7 +3178,7 @@ function cardHtml(p) {
 
   return `
     <article class="product-card ${soldOut ? 'sold-out' : ''}" onclick="openProduct('${p.id}')">
-      <div class="card-image-wrap">${soldBadge}${preorderBadge}${igIcon}${imgHtml}</div>
+      <div class="card-image-wrap">${soldBadge}${preorderBadge}${renderCardTags(p.tags)}${igIcon}${imgHtml}</div>
       <div class="card-body">
         <div class="card-colors">${colorsHtml}</div>
         <div class="card-name">${escapeHtml(p.name || '未命名商品')}</div>
@@ -3408,6 +3437,8 @@ function renderDetail() {
           </a>
         ` : ''}
 
+        ${renderDetailTags(p.tags)}
+        ${p.publicNote ? `<div style="margin:12px 0;padding:12px 14px;background:linear-gradient(135deg,rgba(212,151,104,.08),rgba(212,151,104,.02));border-left:3px solid var(--apricot-deep,#D49768);border-radius:8px;font-size:13px;color:var(--text-soft,#7C6E5F);line-height:1.7;white-space:pre-wrap;">📢 ${escapeHtml(p.publicNote)}</div>` : ''}
         ${(p.material || p.materialDesc) ? generateMaterialCard(p.material, p.materialDesc) : ''}
 
         ${availableColors.length > 0 ? `
