@@ -3164,7 +3164,7 @@ function cardHtml(p) {
     : `<div class="card-image-placeholder">👗</div>`;
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
   const preorderBadge = isPreorder ? `<div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:2;box-shadow:0 2px 6px rgba(139,111,71,.3);display:inline-flex;align-items:center;gap:4px;">${ribbonIcon(11, 1.9)}<span>預購</span></div>` : '';
-  const igIcon = p.link ? `<div style="position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
+  const igIcon = p.link ? `<div style="position:absolute;bottom:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
   // 只顯示還有庫存的顏色（售完的過濾掉）
   const availableColors = getAvailableColors(p).slice(0, 5);
   const colorsHtml = availableColors.map(c => {
