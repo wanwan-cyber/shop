@@ -2891,8 +2891,12 @@ function generateMaterialCard(str, manual) {
   `;
 }
 
-function getColorHex(name) {
+function getColorHex(name, product) {
   if (!name) return '#E8B587';
+  // ★ v2.9.9 商品自訂色碼優先（POS 端從照片取色時存的）
+  if (product && product.colorSwatches && product.colorSwatches[name]) {
+    return product.colorSwatches[name];
+  }
   if (/^#[0-9A-Fa-f]{3,8}$/.test(name)) return name;
   // 1. 先直接查 pattern（單字）
   const directPattern = COLOR_PATTERNS[name] || COLOR_PATTERNS[name.replace(/色$/, '')];
@@ -3197,7 +3201,7 @@ function cardHtml(p) {
   // 只顯示還有庫存的顏色（售完的過濾掉）
   const availableColors = getAvailableColors(p).slice(0, 5);
   const colorsHtml = availableColors.map(c => {
-    const hex = getColorHex(c);
+    const hex = getColorHex(c, p);
     // 圖案（gradient）不動；純色的淺色系加深 border，不然在白卡片上看不見
     const isGradient = hex.includes('gradient');
     const isPale = !isGradient && /^#(F|E)[A-F0-9]/i.test(hex);
@@ -3479,7 +3483,7 @@ function renderDetail() {
             <div class="variant-options">
               ${availableColors.map(c => `
                 <button class="color-chip ${c === selectedColor ? 'selected' : ''}" onclick="selectColor('${escapeAttr(c)}')">
-                  <span class="swatch" style="background:${getColorHex(c)}"></span>${escapeHtml(c)}
+                  <span class="swatch" style="background:${getColorHex(c, p)}"></span>${escapeHtml(c)}
                 </button>
               `).join('')}
             </div>
