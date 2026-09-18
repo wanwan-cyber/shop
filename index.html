@@ -3028,12 +3028,32 @@ async function loadTagColors() {
 }
 
 // ============================================================
+// 🗂 分類順序：從 Apps Script 拉 POS 端設定的排序（v2.9.10）
+// ============================================================
+let SHOP_CAT_ORDER = []; // 分類名稱陣列，POS 端排好順序後 shop 依此顯示
+async function loadCatOrder() {
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getCatOrder&_t=${Date.now()}`);
+    const data = await res.json();
+    if (data && data.ok && Array.isArray(data.cats) && data.cats.length > 0) {
+      SHOP_CAT_ORDER = data.cats.map(c => c.name).filter(Boolean);
+      if (typeof renderCatBar === 'function') { try { renderCatBar(); } catch(e) {} }
+    }
+  } catch (err) {
+    console.warn('無法載入分類順序，改用預設', err);
+  }
+}
+
+// ============================================================
 // 篩選 + 排序
 // ============================================================
 function getFilteredProducts() {
   let list = allProducts.slice();
   // 只顯示已上架
   list = list.filter(p => p.onlineShop === true);
+  // ★ v2.9.10 完全隱藏售完商品（庫存 = 0 且非預購 → 客人根本不會看到）
+  list = list.filter(p => p.preorder === true || (p.stock || 0) > 0);
   // 🎀 預購 tab：只顯示預購品；其他 tab：排除預購品
   if (currentCat === '預購') {
     list = list.filter(p => p.preorder === true);
@@ -3129,11 +3149,17 @@ function ribbonIcon(size = 14, strokeWidth = 1.7) {
 // 分類 chip 產生
 // ============================================================
 function renderCatBar() {
-  const onShelf = allProducts.filter(p => p.onlineShop);
+  // ★ v2.9.10 只算「上架 且 有貨/預購」的商品 — 避免空分類 chip 出現
+  const onShelf = allProducts.filter(p => p.onlineShop && (p.preorder === true || (p.stock || 0) > 0));
   const hasPreorder = onShelf.some(p => p.preorder === true);
   const cats = ['全部'];
   if (hasPreorder) cats.push('預購'); // 內部識別符，chip 顯示會加緞帶 icon
-  cats.push(...new Set(onShelf.filter(p => p.preorder !== true).map(p => p.cat).filter(Boolean)));
+  // ★ v2.9.10 分類順序：先依 SHOP_CAT_ORDER 排、沒被排到的按預設順序放最後
+  const derivedSet = new Set(onShelf.filter(p => p.preorder !== true).map(p => p.cat).filter(Boolean));
+  const sortedCats = [];
+  SHOP_CAT_ORDER.forEach(name => { if (derivedSet.has(name)) { sortedCats.push(name); derivedSet.delete(name); } });
+  [...derivedSet].forEach(name => sortedCats.push(name));
+  cats.push(...sortedCats);
   const bar = document.getElementById('catBar');
   bar.innerHTML = cats.map(c => {
     const isPreorder = c === '預購';
@@ -4745,6 +4771,8 @@ loadProducts().then(() => {
 loadBanners();
 // ★ 載入標籤顏色（POS 端可改，官網跟著變）
 loadTagColors();
+// ★ 載入分類順序（POS 端可拖曳排序，官網跟著變）
+loadCatOrder();
 
 // ============================================================
 // ★ 首頁 Hero Banner 輪播
