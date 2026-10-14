@@ -3447,18 +3447,30 @@ function cardHtml(p) {
   const igIcon = p.link ? `<div style="position:absolute;bottom:10px;left:10px;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;padding:3px 7px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:0.5px;z-index:2;box-shadow:0 2px 6px rgba(220,39,67,0.3);">📷 IG</div>` : '';
   // 只顯示還有庫存的顏色（售完的過濾掉）
   const availableColors = getAvailableColors(p).slice(0, 5);
+  // ★ v2.9.15 建立顏色→圖片 map（找 imageColors 裡該顏色的第一張圖）
+  const imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  const imageColors = Array.isArray(p.imageColors) ? p.imageColors : [];
   const colorsHtml = availableColors.map(c => {
     const hex = getColorHex(c, p);
-    // 圖案（gradient）不動；純色的淺色系加深 border，不然在白卡片上看不見
     const isGradient = hex.includes('gradient');
     const isPale = !isGradient && /^#(F|E)[A-F0-9]/i.test(hex);
     const border = isPale ? 'border:1px solid #c8bfae;' : '';
-    return `<span class="color-dot" style="background:${hex};${border}" title="${escapeAttr(c)}"></span>`;
+    // 找這個顏色的對應圖
+    const colorImgIdx = imageColors.findIndex(ic => ic === c);
+    const hasImg = colorImgIdx >= 0 && imgs[colorImgIdx];
+    const handlers = hasImg
+      ? ` onmouseenter="cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')" onmouseleave="cardPreviewReset('${p.id}')" onclick="event.stopPropagation();cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')"`
+      : '';
+    const extraStyle = hasImg ? 'cursor:pointer;outline:1px solid rgba(201,168,76,.3);outline-offset:1px;' : '';
+    return `<span class="color-dot" style="background:${hex};${border}${extraStyle}" title="${escapeAttr(c)}${hasImg ? '（點看圖）' : ''}"${handlers}></span>`;
   }).join('');
+
+  // ★ v2.9.15 卡片 img 加 data-card-id 讓 preview handlers 找得到
+  const imgHtmlWithId = imgHtml.replace('<img class="card-image"', `<img class="card-image" data-card-id="${p.id}" data-original-src="${thumb(img)}"`);
 
   return `
     <article class="product-card ${soldOut ? 'sold-out' : ''}" onclick="openProduct('${p.id}')">
-      <div class="card-image-wrap">${soldBadge}${preorderBadge}${renderCardTags(p.tags)}${igIcon}${imgHtml}</div>
+      <div class="card-image-wrap">${soldBadge}${preorderBadge}${renderCardTags(p.tags)}${igIcon}${imgHtmlWithId}</div>
       <div class="card-body">
         <div class="card-colors">${colorsHtml}</div>
         <div class="card-name">${escapeHtml(p.name || '未命名商品')}</div>
@@ -3466,6 +3478,19 @@ function cardHtml(p) {
       </div>
     </article>
   `;
+}
+
+// ★ v2.9.15 商品卡片 — 滑過/點顏色預覽對應圖片
+function cardPreviewColor(pid, url) {
+  const img = document.querySelector(`img.card-image[data-card-id="${pid}"]`);
+  if (!img) return;
+  img.src = thumb(url);
+}
+function cardPreviewReset(pid) {
+  const img = document.querySelector(`img.card-image[data-card-id="${pid}"]`);
+  if (!img) return;
+  const orig = img.getAttribute('data-original-src');
+  if (orig) img.src = orig;
 }
 
 // ============================================================
@@ -3834,6 +3859,11 @@ function selectColor(color) {
   const availSizes = getAvailableSizes(currentProduct, color);
   if (!availSizes.includes(selectedSize)) {
     selectedSize = availSizes[0] || null;
+  }
+  // ★ v2.9.15 若該顏色有對應的照片 → 主圖切到那張
+  if (currentProduct && Array.isArray(currentProduct.imageColors)) {
+    const imgIdx = currentProduct.imageColors.findIndex(c => c === color);
+    if (imgIdx >= 0) selectedImageIdx = imgIdx;
   }
   renderDetail();
 }
