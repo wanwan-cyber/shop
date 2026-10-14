@@ -3188,17 +3188,17 @@ function renderModelPhotosSection(p) {
 }
 
 // 開啟示範照 lightbox（點縮圖放大）
-// ★ v2.9.17 商品實測尺寸（依商品類型顯示對應欄位）
+// ★ v2.9.19 商品實測尺寸 — circumference:true 表示圍類（Wan 填平量，試算時 ×2 才能跟客人圍一圈比對）
 const SHOP_MEASURE_FIELDS = [
-  { key: 'shoulder',    label: '肩寬', icon: '👕' },
-  { key: 'bust',        label: '胸圍', icon: '💠' },
-  { key: 'waist',       label: '腰圍', icon: '⌛' },
-  { key: 'hip',         label: '臀圍', icon: '🍑' },
+  { key: 'shoulder',    label: '肩寬', icon: '👕' },                        // 肩寬是直線不是圍，不用 ×2
+  { key: 'bust',        label: '胸圍', icon: '💠', circumference: true },   // ×2 才能比客人胸圍
+  { key: 'waist',       label: '腰圍', icon: '⌛', circumference: true },   // ×2 才能比客人腰圍
+  { key: 'hip',         label: '臀圍', icon: '🍑', circumference: true },   // ×2 才能比客人臀圍
   { key: 'topLength',   label: '衣長', icon: '📐' },
   { key: 'sleeveLength',label: '袖長', icon: '🫳' },
   { key: 'pantsLength', label: '褲長', icon: '📏' },
   { key: 'skirtLength', label: '裙長', icon: '📏' },
-  { key: 'dressLength',  label: '總長', icon: '📐' },
+  { key: 'dressLength', label: '總長', icon: '📐' },
 ];
 const USER_MEASURE_KEY = 'shop_user_measurements';
 function getUserMeasurements() {
@@ -3251,8 +3251,13 @@ function renderMeasurementsSection(p) {
   const availFields = SHOP_MEASURE_FIELDS.filter(f => usedKeys.has(f.key));
   if (availFields.length === 0) return '';
 
-  // 表格：橫軸=規格、縱軸=尺碼
-  const headerCells = availFields.map(f => `<th style="padding:8px 6px;text-align:center;font-size:12px;color:var(--wood,#8B6F47);background:#fff7eb;font-weight:700;border-bottom:1px solid rgba(139,111,71,.15);">${f.icon}<br>${f.label}</th>`).join('');
+  // ★ v2.9.19 表格 header：圍類欄位加「平量」小字標註，提示客人這是攤平數字
+  const headerCells = availFields.map(f => {
+    const flatMark = f.circumference ? '<div style="font-size:9px;font-weight:500;color:var(--text-mute,#A9998A);margin-top:2px;">（平量）</div>' : '';
+    return `<th style="padding:8px 6px;text-align:center;font-size:12px;color:var(--wood,#8B6F47);background:#fff7eb;font-weight:700;border-bottom:1px solid rgba(139,111,71,.15);">${f.icon}<br>${f.label}${flatMark}</th>`;
+  }).join('');
+  // 有圍類欄位 → 顯示提示
+  const hasCircumference = availFields.some(f => f.circumference);
   const bodyRows = sizes.map(size => {
     const row = m.bySize[size] || {};
     const cells = availFields.map(f => {
@@ -3262,15 +3267,16 @@ function renderMeasurementsSection(p) {
     return `<tr><th style="padding:8px 10px;background:#fffbf4;color:var(--wood,#8B6F47);font-size:13px;font-weight:800;text-align:center;border-bottom:1px dashed rgba(139,111,71,.1);">${escapeHtml(size)}</th>${cells}</tr>`;
   }).join('');
 
-  // 試算區：客人填 4 個欄位
+  // 試算區：客人填對應欄位（圍類提示要填「圍一圈」）
   const user = getUserMeasurements();
   const inputRows = availFields.map(f => {
     const userVal = user[f.key] || '';
+    const placeholder = f.circumference ? `你的${f.label}（圍一圈）` : `你的${f.label}`;
     return `
       <div style="display:grid;grid-template-columns:76px 1fr;gap:8px;align-items:center;padding:6px 0;">
         <label style="font-size:13px;color:var(--text-soft,#7C6E5F);">${f.icon} ${f.label}</label>
         <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" inputmode="decimal" step="0.5" min="0" max="300" value="${userVal}" placeholder="你的${f.label}" oninput="updateUserMeasureFor('${p.id}','${f.key}',this.value)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid rgba(139,111,71,.3);border-radius:6px;font-size:14px;text-align:right;background:#fff;">
+          <input type="number" inputmode="decimal" step="0.5" min="0" max="300" value="${userVal}" placeholder="${placeholder}" oninput="updateUserMeasureFor('${p.id}','${f.key}',this.value)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid rgba(139,111,71,.3);border-radius:6px;font-size:14px;text-align:right;background:#fff;">
           <span style="font-size:11px;color:var(--text-mute,#A9998A);">cm</span>
         </div>
       </div>
@@ -3286,12 +3292,13 @@ function renderMeasurementsSection(p) {
           <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-top:2px;">單位 cm${m.elastic > 0 ? ` · ✨ 彈性 +${m.elastic} cm` : ''}</div>
         </div>
       </div>
-      <div style="overflow-x:auto;background:#fff;border-radius:8px;margin-bottom:12px;border:1px solid rgba(139,111,71,.1);">
+      <div style="overflow-x:auto;background:#fff;border-radius:8px;margin-bottom:${hasCircumference ? '6px' : '12px'};border:1px solid rgba(139,111,71,.1);">
         <table style="width:100%;border-collapse:separate;border-spacing:0;">
           <thead><tr><th style="padding:8px 10px;background:#fff7eb;font-size:11px;color:var(--text-mute,#A9998A);text-align:center;border-bottom:1px solid rgba(139,111,71,.15);">尺碼</th>${headerCells}</tr></thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>
+      ${hasCircumference ? '<div style="font-size:11px;color:var(--text-mute,#A9998A);margin-bottom:12px;padding:0 4px;">💡 <strong>平量</strong>＝攤平量一邊的寬度；成品圍一圈 ≈ 平量 × 2。試算時系統會自動幫你換算。</div>' : ''}
       <details id="fit-calc-${p.id}" ontoggle="if(this.open){ setTimeout(() => runFitCheckForProduct('${p.id}'), 50); }">
         <summary style="cursor:pointer;padding:10px 14px;background:linear-gradient(135deg,#D49768,#C87879);color:#fff;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;list-style:none;">
           👗 試算你的合身度 — 點開輸入你的尺寸
@@ -3341,7 +3348,8 @@ function runFitCheckForProduct(pid) {
   }
 
   // 對每個尺碼算分：
-  // - 每個已填欄位：若客人尺寸 ≤ 商品該尺碼 + elastic → pass；否則 fail
+  // ★ v2.9.19 圍類欄位（bust/waist/hip）× 2 才能跟客人圍一圈比對
+  // - 每個已填欄位：若客人尺寸 ≤ 商品限制 → pass
   // - looseness: 平均 (限制 - 用戶) 的 delta（正=有空間，負=超出）
   const scores = sizes.map(size => {
     const row = m.bySize[size] || {};
@@ -3349,7 +3357,10 @@ function runFitCheckForProduct(pid) {
     userFilledKeys.forEach(k => {
       const prodV = row[k];
       if (prodV == null) return; // 該尺碼沒填這個欄位，略過
-      const limit = prodV + elastic;
+      // ★ 圍類：商品值 ×2（彈性也 ×2，因為彈性是攤平的額外伸展範圍）
+      const fieldDef = SHOP_MEASURE_FIELDS.find(f => f.key === k);
+      const mult = (fieldDef && fieldDef.circumference) ? 2 : 1;
+      const limit = (prodV * mult) + (elastic * mult);
       const userV = user[k];
       if (userV <= limit) pass++;
       else fail++;
