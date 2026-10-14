@@ -3188,14 +3188,18 @@ function renderModelPhotosSection(p) {
 }
 
 // 開啟示範照 lightbox（點縮圖放大）
-// ★ v2.9.13 商品實測尺寸 + 客人試算合身度
+// ★ v2.9.17 商品實測尺寸（依商品類型顯示對應欄位）
 const SHOP_MEASURE_FIELDS = [
-  { key: 'shoulder', label: '肩寬', icon: '👕' },
-  { key: 'bust',     label: '胸圍', icon: '💠' },
-  { key: 'waist',    label: '腰圍', icon: '⌛' },
-  { key: 'hip',      label: '臀圍', icon: '🍑' },
+  { key: 'shoulder',    label: '肩寬', icon: '👕' },
+  { key: 'bust',        label: '胸圍', icon: '💠' },
+  { key: 'waist',       label: '腰圍', icon: '⌛' },
+  { key: 'hip',         label: '臀圍', icon: '🍑' },
+  { key: 'topLength',   label: '衣長', icon: '📐' },
+  { key: 'sleeveLength',label: '袖長', icon: '🫳' },
+  { key: 'pantsLength', label: '褲長', icon: '📏' },
+  { key: 'skirtLength', label: '裙長', icon: '📏' },
+  { key: 'dressLength',  label: '總長', icon: '📐' },
 ];
-// 跨商品記住上次輸入的尺寸，省得每個商品都要重填
 const USER_MEASURE_KEY = 'shop_user_measurements';
 function getUserMeasurements() {
   try { return JSON.parse(localStorage.getItem(USER_MEASURE_KEY)) || {}; }
@@ -3205,36 +3209,70 @@ function saveUserMeasurements(m) {
   try { localStorage.setItem(USER_MEASURE_KEY, JSON.stringify(m)); } catch (e) {}
 }
 
-function renderMeasurementsSection(p) {
-  const m = p.measurements || {};
-  const availKeys = SHOP_MEASURE_FIELDS.filter(f => m[f.key] && m[f.key].v != null);
-  if (availKeys.length === 0) return '';
-  const user = getUserMeasurements();
+// 把舊格式 {shoulder:{v,max}, ...} 歸一化成新 {elastic, bySize}；新格式直接回傳
+function normalizeMeasurements(m, productSizes) {
+  if (!m || typeof m !== 'object') return null;
+  if (m.bySize && typeof m.bySize === 'object' && Object.keys(m.bySize).length > 0) {
+    return { elastic: Number(m.elastic) || 0, bySize: m.bySize };
+  }
+  // 舊格式：{shoulder:{v,max}, ...} → 套用到所有 productSizes（或單一通用組）
+  const oldKeys = ['shoulder', 'bust', 'waist', 'hip'];
+  const hasOld = oldKeys.some(k => m[k] && m[k].v != null);
+  if (!hasOld) return null;
+  const row = {};
+  let maxDelta = 0;
+  oldKeys.forEach(k => {
+    if (m[k] && m[k].v != null) {
+      row[k] = Number(m[k].v);
+      if (m[k].max != null && m[k].max > m[k].v) {
+        const d = Number(m[k].max) - Number(m[k].v);
+        if (d > maxDelta) maxDelta = d;
+      }
+    }
+  });
+  const bySize = {};
+  const sizes = (productSizes && productSizes.length) ? productSizes : ['通用'];
+  sizes.forEach(s => { bySize[s] = { ...row }; });
+  return { elastic: maxDelta, bySize };
+}
 
-  // 商品尺寸展示列
-  const sizeRows = availKeys.map(f => {
-    const data = m[f.key];
-    const vText = `${data.v} cm` + (data.max ? ` <span style="color:var(--wood,#8B6F47);font-size:11px;">（彈性可到 ${data.max} cm）</span>` : '');
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px dashed rgba(139,111,71,.15);">
-        <span style="font-size:13px;color:var(--text-soft,#7C6E5F);">${f.icon} ${f.label}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--primary,#4A3F35);">${vText}</span>
-      </div>
-    `;
+function renderMeasurementsSection(p) {
+  const m = normalizeMeasurements(p.measurements, p.sizes);
+  if (!m) return '';
+  const sizes = Object.keys(m.bySize);
+  if (sizes.length === 0) return '';
+  // 收集所有有填的欄位 keys（union）
+  const usedKeys = new Set();
+  sizes.forEach(s => {
+    Object.keys(m.bySize[s] || {}).forEach(k => {
+      if (m.bySize[s][k] != null) usedKeys.add(k);
+    });
+  });
+  const availFields = SHOP_MEASURE_FIELDS.filter(f => usedKeys.has(f.key));
+  if (availFields.length === 0) return '';
+
+  // 表格：橫軸=規格、縱軸=尺碼
+  const headerCells = availFields.map(f => `<th style="padding:8px 6px;text-align:center;font-size:12px;color:var(--wood,#8B6F47);background:#fff7eb;font-weight:700;border-bottom:1px solid rgba(139,111,71,.15);">${f.icon}<br>${f.label}</th>`).join('');
+  const bodyRows = sizes.map(size => {
+    const row = m.bySize[size] || {};
+    const cells = availFields.map(f => {
+      const v = row[f.key];
+      return `<td style="padding:8px 6px;text-align:center;font-size:13px;font-weight:600;color:var(--primary,#4A3F35);border-bottom:1px dashed rgba(139,111,71,.1);">${v != null ? v : '—'}</td>`;
+    }).join('');
+    return `<tr><th style="padding:8px 10px;background:#fffbf4;color:var(--wood,#8B6F47);font-size:13px;font-weight:800;text-align:center;border-bottom:1px dashed rgba(139,111,71,.1);">${escapeHtml(size)}</th>${cells}</tr>`;
   }).join('');
 
-  // 客人輸入列（每個欄位有 input + 結果 badge）
-  const inputRows = availKeys.map(f => {
-    const data = m[f.key];
+  // 試算區：客人填 4 個欄位
+  const user = getUserMeasurements();
+  const inputRows = availFields.map(f => {
     const userVal = user[f.key] || '';
     return `
-      <div style="display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center;padding:6px 0;">
+      <div style="display:grid;grid-template-columns:76px 1fr;gap:8px;align-items:center;padding:6px 0;">
         <label style="font-size:13px;color:var(--text-soft,#7C6E5F);">${f.icon} ${f.label}</label>
         <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" inputmode="decimal" step="0.5" min="0" max="300" value="${userVal}" placeholder="你的${f.label}" oninput="updateUserMeasure(this,'${f.key}',${data.v},${data.max || 'null'})" style="flex:1;min-width:0;padding:7px 10px;border:1px solid rgba(139,111,71,.3);border-radius:6px;font-size:14px;text-align:right;background:#fff;">
+          <input type="number" inputmode="decimal" step="0.5" min="0" max="300" value="${userVal}" placeholder="你的${f.label}" oninput="updateUserMeasureFor('${p.id}','${f.key}',this.value)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid rgba(139,111,71,.3);border-radius:6px;font-size:14px;text-align:right;background:#fff;">
           <span style="font-size:11px;color:var(--text-mute,#A9998A);">cm</span>
         </div>
-        <span id="fit-${f.key}" style="min-width:48px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:10px;background:#f3ede0;color:var(--text-mute,#A9998A);">—</span>
       </div>
     `;
   }).join('');
@@ -3243,23 +3281,26 @@ function renderMeasurementsSection(p) {
     <div style="margin:16px 0;padding:14px;background:#fffbf4;border:1px solid rgba(139,111,71,.2);border-radius:12px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span style="font-size:18px;">📏</span>
-        <div>
+        <div style="flex:1;">
           <div style="font-size:14px;font-weight:800;color:var(--wood,#8B6F47);letter-spacing:.5px;">商品實測尺寸</div>
-          <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-top:2px;">單位 cm，有彈性布料會標示彈性範圍</div>
+          <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-top:2px;">單位 cm${m.elastic > 0 ? ` · ✨ 彈性 +${m.elastic} cm` : ''}</div>
         </div>
       </div>
-      <div style="background:#fff;border-radius:8px;overflow:hidden;margin-bottom:12px;">
-        ${sizeRows}
+      <div style="overflow-x:auto;background:#fff;border-radius:8px;margin-bottom:12px;border:1px solid rgba(139,111,71,.1);">
+        <table style="width:100%;border-collapse:separate;border-spacing:0;">
+          <thead><tr><th style="padding:8px 10px;background:#fff7eb;font-size:11px;color:var(--text-mute,#A9998A);text-align:center;border-bottom:1px solid rgba(139,111,71,.15);">尺碼</th>${headerCells}</tr></thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
       </div>
-      <details id="fit-calc-${p.id}" style="margin-top:4px;" ontoggle="if(this.open){ setTimeout(() => runFitCheckForAll('${p.id}'), 50); }">
-        <summary style="cursor:pointer;padding:8px 12px;background:linear-gradient(135deg,#D49768,#C87879);color:#fff;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;list-style:none;">
+      <details id="fit-calc-${p.id}" ontoggle="if(this.open){ setTimeout(() => runFitCheckForProduct('${p.id}'), 50); }">
+        <summary style="cursor:pointer;padding:10px 14px;background:linear-gradient(135deg,#D49768,#C87879);color:#fff;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;list-style:none;">
           👗 試算你的合身度 — 點開輸入你的尺寸
         </summary>
         <div style="padding:12px;background:#fff;border:1px solid rgba(139,111,71,.15);border-top:none;border-radius:0 0 8px 8px;margin-top:-4px;">
           <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-bottom:8px;">💡 輸入後會自動記住，下次看別件商品不用再輸入</div>
           ${inputRows}
-          <div id="fit-verdict-${p.id}" style="margin-top:10px;padding:8px 12px;background:#f3ede0;border-radius:8px;text-align:center;font-size:13px;font-weight:700;color:var(--text-mute,#A9998A);">
-            輸入上面欄位後顯示整體建議
+          <div id="fit-verdict-${p.id}" style="margin-top:12px;padding:12px;background:#f3ede0;border-radius:10px;text-align:center;font-size:13px;color:var(--text-mute,#A9998A);">
+            輸入上面欄位後，會自動推薦適合的尺碼
           </div>
         </div>
       </details>
@@ -3267,76 +3308,105 @@ function renderMeasurementsSection(p) {
   `;
 }
 
-// 客人輸入自己的尺寸 → 比對 → 更新 badge
-function updateUserMeasure(input, key, prodV, prodMax) {
-  const val = parseFloat(input.value);
-  // 存入 localStorage
+// 客人輸入某個欄位 → 存 localStorage → 重算該商品的建議尺碼
+function updateUserMeasureFor(pid, key, val) {
   const user = getUserMeasurements();
-  if (isNaN(val) || input.value === '') { delete user[key]; }
-  else { user[key] = val; }
+  const num = parseFloat(val);
+  if (isNaN(num) || val === '') { delete user[key]; }
+  else { user[key] = num; }
   saveUserMeasurements(user);
-  // 當下 badge 立即更新
-  const badge = document.getElementById('fit-' + key);
-  if (badge) {
-    if (isNaN(val) || input.value === '') {
-      badge.textContent = '—';
-      badge.style.background = '#f3ede0';
-      badge.style.color = 'var(--text-mute, #A9998A)';
-    } else {
-      const limit = (prodMax != null && prodMax !== 'null') ? Number(prodMax) : Number(prodV);
-      const fits = val <= limit;
-      badge.textContent = fits ? '✓ 適合' : '✗ 偏緊';
-      badge.style.background = fits ? '#dcf2dc' : '#fde8e8';
-      badge.style.color = fits ? '#2d7a2d' : '#c0392b';
-    }
-  }
-  // 整體建議（找出 details 容器來看是哪個 product）
-  const details = input.closest('details');
-  if (details) {
-    const pidMatch = details.id.match(/^fit-calc-(.+)$/);
-    if (pidMatch) runFitCheckForAll(pidMatch[1]);
-  }
+  runFitCheckForProduct(pid);
 }
 
-// 綜合判斷整體適不適合（所有已填欄位都 ✓ 才算整體 ✓）
-function runFitCheckForAll(pid) {
+// 核心：對每個尺碼算分數，推薦最適合的尺碼 + 每個尺碼對比
+function runFitCheckForProduct(pid) {
   const p = allProducts.find(x => x.id === pid);
-  if (!p || !p.measurements) return;
-  const user = getUserMeasurements();
+  if (!p) return;
+  const m = normalizeMeasurements(p.measurements, p.sizes);
+  if (!m) return;
   const verdict = document.getElementById('fit-verdict-' + pid);
   if (!verdict) return;
-  let filled = 0, pass = 0, fail = 0;
-  SHOP_MEASURE_FIELDS.forEach(f => {
-    const data = p.measurements[f.key];
-    if (!data || data.v == null) return;
-    const userVal = user[f.key];
-    if (userVal == null) return;
-    filled++;
-    const limit = data.max != null ? data.max : data.v;
-    if (userVal <= limit) pass++;
-    else fail++;
-    // 同時更新 badge（details 打開時用得到）
-    const badge = document.getElementById('fit-' + f.key);
-    if (badge) {
-      const fits = userVal <= limit;
-      badge.textContent = fits ? '✓ 適合' : '✗ 偏緊';
-      badge.style.background = fits ? '#dcf2dc' : '#fde8e8';
-      badge.style.color = fits ? '#2d7a2d' : '#c0392b';
-    }
-  });
-  if (filled === 0) {
-    verdict.textContent = '輸入上面欄位後顯示整體建議';
+  const user = getUserMeasurements();
+  const elastic = m.elastic || 0;
+  const sizes = Object.keys(m.bySize);
+  if (sizes.length === 0) return;
+
+  // 蒐集客人填過的欄位
+  const userFilledKeys = SHOP_MEASURE_FIELDS.filter(f => user[f.key] != null && !isNaN(user[f.key])).map(f => f.key);
+  if (userFilledKeys.length === 0) {
+    verdict.innerHTML = '輸入上面欄位後，會自動推薦適合的尺碼';
     verdict.style.background = '#f3ede0';
     verdict.style.color = 'var(--text-mute, #A9998A)';
-  } else if (fail === 0) {
-    verdict.textContent = `👗 整體：適合你！（${pass}/${filled} 項都在範圍內）`;
-    verdict.style.background = '#dcf2dc';
-    verdict.style.color = '#2d7a2d';
-  } else {
-    verdict.textContent = `⚠ 整體：${fail} 項偏緊，建議現場試穿或參考相近款式`;
-    verdict.style.background = '#fde8e8';
-    verdict.style.color = '#c0392b';
+    return;
   }
+
+  // 對每個尺碼算分：
+  // - 每個已填欄位：若客人尺寸 ≤ 商品該尺碼 + elastic → pass；否則 fail
+  // - looseness: 平均 (限制 - 用戶) 的 delta（正=有空間，負=超出）
+  const scores = sizes.map(size => {
+    const row = m.bySize[size] || {};
+    let pass = 0, fail = 0, delta = 0, countedForDelta = 0;
+    userFilledKeys.forEach(k => {
+      const prodV = row[k];
+      if (prodV == null) return; // 該尺碼沒填這個欄位，略過
+      const limit = prodV + elastic;
+      const userV = user[k];
+      if (userV <= limit) pass++;
+      else fail++;
+      delta += (limit - userV);
+      countedForDelta++;
+    });
+    const avgDelta = countedForDelta > 0 ? delta / countedForDelta : 0;
+    return { size, pass, fail, avgDelta };
+  });
+
+  // 排序找最推薦：fail=0 優先；fail=0 中 avgDelta 最接近 0 的（最合身，不會太鬆）；
+  // 全都 fail > 0 → 選 fail 最少、再選 avgDelta 最大（最接近適合）
+  const sortedByFit = [...scores].sort((a, b) => {
+    if (a.fail !== b.fail) return a.fail - b.fail;
+    // fail 相同 → 越接近 0 越合身（但不能是負的）
+    // 若兩者都 pass → avgDelta 小的（偏合身）優先；若都 fail → avgDelta 大的（接近適合）優先
+    if (a.fail === 0) return Math.abs(a.avgDelta) - Math.abs(b.avgDelta);
+    return b.avgDelta - a.avgDelta;
+  });
+  const best = sortedByFit[0];
+
+  // 建立推薦卡 + 對比表
+  let bestLabel, bestBg, bestColor;
+  if (best.fail === 0) {
+    bestLabel = `👗 建議尺碼：${best.size}`;
+    bestBg = 'linear-gradient(135deg,#dcf2dc,#b7e0b7)';
+    bestColor = '#1b5e20';
+  } else {
+    bestLabel = `⚠ 所有尺碼都偏緊，最接近：${best.size}（建議現場試穿）`;
+    bestBg = 'linear-gradient(135deg,#fff3e0,#ffe0b2)';
+    bestColor = '#a04000';
+  }
+
+  // 每尺碼對比列
+  const sizeChips = scores.map(s => {
+    let icon, color, bg;
+    if (s.fail === 0) {
+      if (s.avgDelta <= elastic * 0.3 + 1) { icon = '✓'; color = '#2d7a2d'; bg = '#dcf2dc'; }
+      else { icon = '○'; color = '#8B6F47'; bg = '#fff3e0'; } // 寬鬆
+    } else {
+      icon = '✗'; color = '#c0392b'; bg = '#fde8e8';
+    }
+    const label = s.fail === 0 ? (s.avgDelta <= elastic * 0.3 + 1 ? '剛好' : '偏寬') : '偏緊';
+    const isBest = s.size === best.size;
+    return `<div style="padding:6px 10px;border-radius:8px;background:${bg};color:${color};font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;${isBest ? 'outline:2px solid var(--apricot-deep,#D49768);outline-offset:1px;' : ''}">${icon} ${escapeHtml(s.size)} <span style="opacity:.75;font-weight:500;">${label}</span></div>`;
+  }).join('');
+
+  verdict.innerHTML = `
+    <div style="padding:10px 14px;border-radius:8px;background:${bestBg};color:${bestColor};font-size:14px;font-weight:800;letter-spacing:.5px;margin-bottom:10px;">
+      ${bestLabel}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+      ${sizeChips}
+    </div>
+  `;
+  verdict.style.background = '#fff';
+  verdict.style.textAlign = 'left';
 }
 
 function openModelPhotoLightbox(url, caption) {
