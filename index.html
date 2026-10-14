@@ -3525,8 +3525,11 @@ function cardHtml(p) {
     const isGradient = hex.includes('gradient');
     const isPale = !isGradient && /^#(F|E)[A-F0-9]/i.test(hex);
     const border = isPale ? 'border:1px solid #c8bfae;' : '';
-    // 找這個顏色的對應圖
-    const colorImgIdx = imageColors.findIndex(ic => ic === c);
+    // ★ v2.9.18 找這個顏色的對應圖（陣列或字串都處理）
+    const colorImgIdx = imageColors.findIndex(ic => {
+      if (Array.isArray(ic)) return ic.includes(c);
+      return ic === c;
+    });
     const hasImg = colorImgIdx >= 0 && imgs[colorImgIdx];
     const handlers = hasImg
       ? ` onmouseenter="cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')" onmouseleave="cardPreviewReset('${p.id}')" onclick="event.stopPropagation();cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')"`
@@ -3930,9 +3933,12 @@ function selectColor(color) {
   if (!availSizes.includes(selectedSize)) {
     selectedSize = availSizes[0] || null;
   }
-  // ★ v2.9.15 若該顏色有對應的照片 → 主圖切到那張
+  // ★ v2.9.18 若該顏色有對應的照片 → 主圖切到那張（支援一張對多色：陣列或字串都處理）
   if (currentProduct && Array.isArray(currentProduct.imageColors)) {
-    const imgIdx = currentProduct.imageColors.findIndex(c => c === color);
+    const imgIdx = currentProduct.imageColors.findIndex(ic => {
+      if (Array.isArray(ic)) return ic.includes(color);
+      return ic === color;
+    });
     if (imgIdx >= 0) selectedImageIdx = imgIdx;
   }
   renderDetail();
