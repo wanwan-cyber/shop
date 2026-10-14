@@ -3135,6 +3135,227 @@ function renderDetailTags(tags) {
   </div>`;
 }
 
+// ★ v2.9.12 詳情頁 — 不同身型的實穿示範照
+const BODY_TYPE_INFO = {
+  X: { label: 'X型', desc: '沙漏', color: '#D49768' },
+  O: { label: 'O型', desc: '圓潤', color: '#C87879' },
+  T: { label: 'T型', desc: '上寬下窄', color: '#7BA482' },
+  H: { label: 'H型', desc: '直筒', color: '#7E92A8' },
+  A: { label: 'A型', desc: '梨形', color: '#A683B0' },
+};
+function renderModelPhotosSection(p) {
+  const photos = Array.isArray(p.modelPhotos) ? p.modelPhotos.filter(m => m && m.url) : [];
+  if (photos.length === 0) return '';
+  // 依身型分組
+  const groups = {};
+  photos.forEach(m => {
+    const type = (m.bodyType || 'X').toUpperCase();
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(m);
+  });
+  const order = ['X', 'O', 'T', 'H', 'A'];
+  const orderedTypes = order.filter(t => groups[t]);
+
+  return `
+    <div style="margin:16px 0;padding:14px;background:linear-gradient(135deg,rgba(232,181,135,.08),rgba(212,151,104,.04));border:1px solid rgba(212,151,104,.2);border-radius:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:18px;">🧍</span>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--wood,#8B6F47);letter-spacing:.5px;">不同身型示範</div>
+          <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-top:2px;">看看不同身型的實穿效果</div>
+        </div>
+      </div>
+      ${orderedTypes.map(type => {
+        const info = BODY_TYPE_INFO[type] || { label: type, desc: '', color: '#8B6F47' };
+        return `
+          <div style="margin-bottom:14px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:${info.color};color:#fff;border-radius:12px;font-size:12px;font-weight:700;margin-bottom:8px;">
+              ${escapeHtml(info.label)} <span style="opacity:.85;font-weight:500;font-size:11px;">${escapeHtml(info.desc)}</span>
+            </div>
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">
+              ${groups[type].map(m => `
+                <div style="flex-shrink:0;width:132px;cursor:pointer;" onclick="openModelPhotoLightbox('${escapeAttr(m.url)}', '${escapeAttr(info.label + (m.note ? ' · ' + m.note : ''))}')">
+                  <div style="width:132px;height:176px;border-radius:10px;background:url('${escapeAttr(m.url)}') center/cover;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.06);"></div>
+                  ${m.note ? `<div style="font-size:11px;color:var(--text-soft,#7C6E5F);margin-top:4px;text-align:center;line-height:1.4;">${escapeHtml(m.note)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// 開啟示範照 lightbox（點縮圖放大）
+// ★ v2.9.13 商品實測尺寸 + 客人試算合身度
+const SHOP_MEASURE_FIELDS = [
+  { key: 'shoulder', label: '肩寬', icon: '👕' },
+  { key: 'bust',     label: '胸圍', icon: '💠' },
+  { key: 'waist',    label: '腰圍', icon: '⌛' },
+  { key: 'hip',      label: '臀圍', icon: '🍑' },
+];
+// 跨商品記住上次輸入的尺寸，省得每個商品都要重填
+const USER_MEASURE_KEY = 'shop_user_measurements';
+function getUserMeasurements() {
+  try { return JSON.parse(localStorage.getItem(USER_MEASURE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveUserMeasurements(m) {
+  try { localStorage.setItem(USER_MEASURE_KEY, JSON.stringify(m)); } catch (e) {}
+}
+
+function renderMeasurementsSection(p) {
+  const m = p.measurements || {};
+  const availKeys = SHOP_MEASURE_FIELDS.filter(f => m[f.key] && m[f.key].v != null);
+  if (availKeys.length === 0) return '';
+  const user = getUserMeasurements();
+
+  // 商品尺寸展示列
+  const sizeRows = availKeys.map(f => {
+    const data = m[f.key];
+    const vText = `${data.v} cm` + (data.max ? ` <span style="color:var(--wood,#8B6F47);font-size:11px;">（彈性可到 ${data.max} cm）</span>` : '');
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px dashed rgba(139,111,71,.15);">
+        <span style="font-size:13px;color:var(--text-soft,#7C6E5F);">${f.icon} ${f.label}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--primary,#4A3F35);">${vText}</span>
+      </div>
+    `;
+  }).join('');
+
+  // 客人輸入列（每個欄位有 input + 結果 badge）
+  const inputRows = availKeys.map(f => {
+    const data = m[f.key];
+    const userVal = user[f.key] || '';
+    return `
+      <div style="display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center;padding:6px 0;">
+        <label style="font-size:13px;color:var(--text-soft,#7C6E5F);">${f.icon} ${f.label}</label>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" inputmode="decimal" step="0.5" min="0" max="300" value="${userVal}" placeholder="你的${f.label}" oninput="updateUserMeasure(this,'${f.key}',${data.v},${data.max || 'null'})" style="flex:1;min-width:0;padding:7px 10px;border:1px solid rgba(139,111,71,.3);border-radius:6px;font-size:14px;text-align:right;background:#fff;">
+          <span style="font-size:11px;color:var(--text-mute,#A9998A);">cm</span>
+        </div>
+        <span id="fit-${f.key}" style="min-width:48px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:10px;background:#f3ede0;color:var(--text-mute,#A9998A);">—</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div style="margin:16px 0;padding:14px;background:#fffbf4;border:1px solid rgba(139,111,71,.2);border-radius:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:18px;">📏</span>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--wood,#8B6F47);letter-spacing:.5px;">商品實測尺寸</div>
+          <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-top:2px;">單位 cm，有彈性布料會標示彈性範圍</div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+        ${sizeRows}
+      </div>
+      <details id="fit-calc-${p.id}" style="margin-top:4px;" ontoggle="if(this.open){ setTimeout(() => runFitCheckForAll('${p.id}'), 50); }">
+        <summary style="cursor:pointer;padding:8px 12px;background:linear-gradient(135deg,#D49768,#C87879);color:#fff;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;list-style:none;">
+          👗 試算你的合身度 — 點開輸入你的尺寸
+        </summary>
+        <div style="padding:12px;background:#fff;border:1px solid rgba(139,111,71,.15);border-top:none;border-radius:0 0 8px 8px;margin-top:-4px;">
+          <div style="font-size:11px;color:var(--text-mute,#A9998A);margin-bottom:8px;">💡 輸入後會自動記住，下次看別件商品不用再輸入</div>
+          ${inputRows}
+          <div id="fit-verdict-${p.id}" style="margin-top:10px;padding:8px 12px;background:#f3ede0;border-radius:8px;text-align:center;font-size:13px;font-weight:700;color:var(--text-mute,#A9998A);">
+            輸入上面欄位後顯示整體建議
+          </div>
+        </div>
+      </details>
+    </div>
+  `;
+}
+
+// 客人輸入自己的尺寸 → 比對 → 更新 badge
+function updateUserMeasure(input, key, prodV, prodMax) {
+  const val = parseFloat(input.value);
+  // 存入 localStorage
+  const user = getUserMeasurements();
+  if (isNaN(val) || input.value === '') { delete user[key]; }
+  else { user[key] = val; }
+  saveUserMeasurements(user);
+  // 當下 badge 立即更新
+  const badge = document.getElementById('fit-' + key);
+  if (badge) {
+    if (isNaN(val) || input.value === '') {
+      badge.textContent = '—';
+      badge.style.background = '#f3ede0';
+      badge.style.color = 'var(--text-mute, #A9998A)';
+    } else {
+      const limit = (prodMax != null && prodMax !== 'null') ? Number(prodMax) : Number(prodV);
+      const fits = val <= limit;
+      badge.textContent = fits ? '✓ 適合' : '✗ 偏緊';
+      badge.style.background = fits ? '#dcf2dc' : '#fde8e8';
+      badge.style.color = fits ? '#2d7a2d' : '#c0392b';
+    }
+  }
+  // 整體建議（找出 details 容器來看是哪個 product）
+  const details = input.closest('details');
+  if (details) {
+    const pidMatch = details.id.match(/^fit-calc-(.+)$/);
+    if (pidMatch) runFitCheckForAll(pidMatch[1]);
+  }
+}
+
+// 綜合判斷整體適不適合（所有已填欄位都 ✓ 才算整體 ✓）
+function runFitCheckForAll(pid) {
+  const p = allProducts.find(x => x.id === pid);
+  if (!p || !p.measurements) return;
+  const user = getUserMeasurements();
+  const verdict = document.getElementById('fit-verdict-' + pid);
+  if (!verdict) return;
+  let filled = 0, pass = 0, fail = 0;
+  SHOP_MEASURE_FIELDS.forEach(f => {
+    const data = p.measurements[f.key];
+    if (!data || data.v == null) return;
+    const userVal = user[f.key];
+    if (userVal == null) return;
+    filled++;
+    const limit = data.max != null ? data.max : data.v;
+    if (userVal <= limit) pass++;
+    else fail++;
+    // 同時更新 badge（details 打開時用得到）
+    const badge = document.getElementById('fit-' + f.key);
+    if (badge) {
+      const fits = userVal <= limit;
+      badge.textContent = fits ? '✓ 適合' : '✗ 偏緊';
+      badge.style.background = fits ? '#dcf2dc' : '#fde8e8';
+      badge.style.color = fits ? '#2d7a2d' : '#c0392b';
+    }
+  });
+  if (filled === 0) {
+    verdict.textContent = '輸入上面欄位後顯示整體建議';
+    verdict.style.background = '#f3ede0';
+    verdict.style.color = 'var(--text-mute, #A9998A)';
+  } else if (fail === 0) {
+    verdict.textContent = `👗 整體：適合你！（${pass}/${filled} 項都在範圍內）`;
+    verdict.style.background = '#dcf2dc';
+    verdict.style.color = '#2d7a2d';
+  } else {
+    verdict.textContent = `⚠ 整體：${fail} 項偏緊，建議現場試穿或參考相近款式`;
+    verdict.style.background = '#fde8e8';
+    verdict.style.color = '#c0392b';
+  }
+}
+
+function openModelPhotoLightbox(url, caption) {
+  // 檢查是否已有 lightbox 容器，沒有就建
+  let box = document.getElementById('modelPhotoLightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'modelPhotoLightbox';
+    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
+    box.onclick = () => box.remove();
+    document.body.appendChild(box);
+  }
+  box.innerHTML = `
+    <img src="${escapeAttr(url)}" style="max-width:96vw;max-height:82vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);">
+    <div style="color:#fff;font-size:14px;margin-top:16px;text-align:center;letter-spacing:.5px;">${escapeHtml(caption || '')}</div>
+    <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:8px;">點任意處關閉</div>
+  `;
+}
+
 function ribbonIcon(size = 14, strokeWidth = 1.7) {
   return `<svg viewBox="0 0 32 32" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;flex-shrink:0;">
     <path d="M14 14 Q6 10, 5 15 Q5 20, 14 18"/>
@@ -3499,6 +3720,8 @@ function renderDetail() {
         ${renderDetailTags(p.tags)}
         ${p.publicNote ? `<div style="margin:12px 0;padding:12px 14px;background:linear-gradient(135deg,rgba(212,151,104,.08),rgba(212,151,104,.02));border-left:3px solid var(--apricot-deep,#D49768);border-radius:8px;font-size:13px;color:var(--text-soft,#7C6E5F);line-height:1.7;white-space:pre-wrap;">📢 ${escapeHtml(p.publicNote)}</div>` : ''}
         ${(p.material || p.materialDesc) ? generateMaterialCard(p.material, p.materialDesc) : ''}
+        ${renderModelPhotosSection(p)}
+        ${renderMeasurementsSection(p)}
 
         ${availableColors.length > 0 ? `
           <div class="variant-section">
@@ -5628,6 +5851,30 @@ function initBodyCheck() {
 }
 
 
+</script>
+
+<!-- 🔝 一鍵回頂部 (v2.9.14) -->
+<button id="back-to-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="回到頂部" aria-label="回到頂部"
+  style="position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--wood,#8B6F47),var(--apricot-deep,#D49768));color:#fff;border:none;box-shadow:0 4px 16px rgba(139,111,71,.35);cursor:pointer;font-size:22px;line-height:1;z-index:999;display:none;align-items:center;justify-content:center;transition:transform .2s,opacity .2s;opacity:0;">
+  ↑
+</button>
+<script>
+  (function() {
+    const btn = document.getElementById('back-to-top-btn');
+    if (!btn) return;
+    function updateBtnVisibility() {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      if (y > 300) {
+        btn.style.display = 'flex';
+        requestAnimationFrame(() => { btn.style.opacity = '1'; });
+      } else {
+        btn.style.opacity = '0';
+        setTimeout(() => { if (parseFloat(btn.style.opacity) === 0) btn.style.display = 'none'; }, 200);
+      }
+    }
+    window.addEventListener('scroll', updateBtnVisibility, { passive: true });
+    updateBtnVisibility();
+  })();
 </script>
 </body>
 </html>
