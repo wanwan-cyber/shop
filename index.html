@@ -4286,7 +4286,90 @@ function handleAddToCart() {
   const stock = getVariantStock(currentProduct, selectedColor, selectedSize);
   if (stock <= 0) { toast('此規格已售完'); return; }
   const qty = parseInt(document.getElementById('qtyInput').value, 10) || 1;
+  // ★ v2.9.34 若此規格是預購 → 跳確認 modal
+  if (isPreorderVariant(currentProduct, selectedColor, selectedSize)) {
+    openPreorderConfirmModal(currentProduct, selectedColor, selectedSize, qty);
+    return;
+  }
   addToCart(currentProduct, selectedColor, selectedSize, qty);
+}
+
+// ★ v2.9.34 預購確認 modal
+function openPreorderConfirmModal(p, color, size, qty) {
+  // 建立 modal（第一次）
+  let overlay = document.getElementById('preorder-confirm-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'preorder-confirm-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = (e) => { if (e.target === overlay) closePreorderConfirmModal(false); };
+    document.body.appendChild(overlay);
+  }
+  const img = (p.images && p.images[0]) || p.image || '';
+  const subtotal = (p.price || 0) * qty;
+  const wholePre = p.preorder === true;
+  const colorPre = isPreorderColor(p, color);
+  const onlyOneSize = (p.sizes || []).length <= 1;
+  const specLabel = wholePre
+    ? '整件商品'
+    : (colorPre || onlyOneSize ? `${color || ''}` : `${color || ''} ${size || ''}`);
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3);">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;border-radius:16px 16px 0 0;">
+        <div style="font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;">
+          ${preorderIcon(18, 1.9)}<span>確認預購</span>
+        </div>
+        <button onclick="closePreorderConfirmModal(false)" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1;">×</button>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="display:flex;gap:12px;align-items:center;padding:10px;background:var(--cream-3);border-radius:12px;margin-bottom:14px;">
+          ${img ? `<img src="${thumb(img)}" alt="" style="width:68px;height:68px;border-radius:10px;object-fit:cover;flex-shrink:0;">` : `<div style="width:68px;height:68px;background:var(--cream-2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">👗</div>`}
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:700;color:var(--wood);line-height:1.4;">${escapeHtml(p.name || '')}</div>
+            <div style="font-size:11px;color:var(--text-mute);margin-top:3px;">${escapeHtml(specLabel)} · 數量 ${qty}</div>
+            <div style="font-size:14px;font-weight:800;color:var(--wood);margin-top:3px;">NT$${subtotal.toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="padding:12px 14px;background:linear-gradient(135deg,rgba(139,111,71,.08),rgba(139,111,71,.02));border:1.5px solid #8B6F47;border-radius:12px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:6px;font-weight:800;color:#8B6F47;font-size:13px;margin-bottom:8px;">
+            ${preorderIcon(14, 1.6)}<span>預購須知</span>
+          </div>
+          <ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text-soft);line-height:1.8;">
+            <li>預購商品約 <strong style="color:var(--wood);">15-30 天</strong>到貨</li>
+            <li>收到貨後立刻通知您出貨</li>
+            <li>若有延遲會提早告知您</li>
+            <li>下單後 24 小時內請完成付款（跟現貨一樣）</li>
+          </ul>
+        </div>
+        <div style="font-size:12px;color:var(--text-mute);text-align:center;line-height:1.6;margin-bottom:12px;">
+          已了解上述預購條件，確定將此商品加入購物車？
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;">
+        <button onclick="closePreorderConfirmModal(false)" style="flex:1;padding:12px;background:#fff;color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">取消</button>
+        <button onclick="closePreorderConfirmModal(true)" style="flex:2;padding:12px;background:linear-gradient(135deg,#8B6F47,#A68968);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.5px;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 10px rgba(139,111,71,.3);">
+          ${preorderIcon(15, 1.8)}<span>確定預購</span>
+        </button>
+      </div>
+    </div>
+  `;
+  overlay.style.display = 'flex';
+  overlay.dataset.pid = p.id;
+  overlay.dataset.color = color;
+  overlay.dataset.size = size;
+  overlay.dataset.qty = String(qty);
+}
+
+function closePreorderConfirmModal(confirmed) {
+  const overlay = document.getElementById('preorder-confirm-overlay');
+  if (!overlay) return;
+  if (confirmed) {
+    const p = allProducts.find(x => x.id === overlay.dataset.pid) || currentProduct;
+    if (p) {
+      addToCart(p, overlay.dataset.color, overlay.dataset.size, parseInt(overlay.dataset.qty, 10) || 1);
+    }
+  }
+  overlay.style.display = 'none';
 }
 
 // ============================================================
