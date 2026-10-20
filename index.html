@@ -2865,7 +2865,8 @@ body.halloween-mode .product-card:active {
     <button class="cart-btn" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
       📏
     </button>
-    <button class="cart-btn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場">
+    <!-- 👗 搭配小劇場按鈕（開發中隱藏，Wan 自己調整完畢再開放） -->
+    <button class="cart-btn" id="dressupBtn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場" style="display:none;">
       👗
     </button>
     <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
@@ -6360,6 +6361,18 @@ window.addEventListener('keydown', e => {
 // ============================================================
 loadCart();
 updateMyOrdersBadge();
+// 👗 搭配小劇場：URL 加 ?dev=1 開啟按鈕（Wan 自己測試用）
+(function enableDressupBtn() {
+  try {
+    if (location.search.includes('dev=1')) {
+      localStorage.setItem('shop_dressup_enabled', '1');
+    }
+    if (localStorage.getItem('shop_dressup_enabled') === '1') {
+      const btn = document.getElementById('dressupBtn');
+      if (btn) btn.style.display = '';
+    }
+  } catch(e) {}
+})();
 // 🎃 萬聖節裝飾（10/20 - 11/02 自動開啟）
 (function initHalloween() {
   const now = new Date();
