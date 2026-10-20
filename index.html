@@ -2439,6 +2439,15 @@ main {
   0%,100% { transform: translateY(0) rotate(-2deg) scale(1); }
   50% { transform: translateY(-10px) rotate(2deg) scale(1.03); }
 }
+/* ★ v2.9.42 萬聖節 hover 橘色光暈（只在萬聖節期間透過 body.halloween-mode 觸發） */
+body.halloween-mode .product-card:hover {
+  box-shadow:
+    0 0 0 1.5px rgba(255,140,30,.25),
+    0 6px 24px rgba(255,140,30,.22),
+    0 2px 8px rgba(0,0,0,.06);
+  border-color: rgba(255,140,30,.35);
+  transition: box-shadow .3s ease, border-color .3s ease, transform .2s ease;
+}
 @keyframes bat-fly-a {
   0% { transform: translate(0,0) scale(1); }
   25% { transform: translate(-18px,8px) scale(.95); }
@@ -5883,6 +5892,8 @@ updateMyOrdersBadge();
   const m = now.getMonth() + 1, d = now.getDate();
   const isHalloweenSeason = (m === 10 && d >= 20) || (m === 11 && d <= 2);
   if (!isHalloweenSeason) return;
+  // ★ v2.9.42 掛 body class 讓 CSS 可以用 .halloween-mode 觸發效果（例如商品卡片 hover 橘色光暈）
+  document.body.classList.add('halloween-mode');
   const pumpkin = document.getElementById('brandHalloween');
   const bats = document.getElementById('halloweenBats');
   const loadingSpinner = document.getElementById('loadingSpinner');
