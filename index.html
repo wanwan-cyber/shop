@@ -730,6 +730,91 @@ main {
   display: block;
 }
 
+/* ★ v2.9.44 詳情頁主圖左右滑動 */
+.detail-main-scroll {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.detail-main-scroll::-webkit-scrollbar { display: none; }
+.detail-main-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+.detail-main-slide img {
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+.detail-main-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+}
+.detail-main-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.6);
+  box-shadow: 0 0 3px rgba(0,0,0,.3);
+  transition: all .2s;
+}
+.detail-main-dot.active {
+  width: 22px;
+  border-radius: 4px;
+  background: #fff;
+}
+.detail-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.9);
+  color: var(--wood);
+  border: none;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,.2);
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 3;
+  font-family: inherit;
+}
+.detail-arrow-l { left: 10px; }
+.detail-arrow-r { right: 10px; }
+.detail-main-image:hover .detail-arrow { opacity: .95; }
+.detail-arrow:hover { background: #fff; }
+@media (hover: none) {
+  .detail-arrow { display: none; }
+}
+
 .detail-sold-badge {
   position: absolute;
   top: 14px;
@@ -4288,14 +4373,29 @@ function renderDetail() {
       <div class="detail-images">
         <div class="detail-main-image">
           ${soldOutAll ? '<div class="detail-sold-badge">SOLD OUT</div>' : ''}
-          ${mainImg
-            ? `<img
-                src="${full(mainImg)}"
-                srcset="${fullSrcset(mainImg)}"
-                sizes="(min-width: 900px) 600px, 100vw"
-                alt="${escapeAttr(p.name)}"
-                loading="eager"
-                fetchpriority="high">`
+          ${images.length > 0
+            ? `<div class="detail-main-scroll" id="detailMainScroll" onscroll="detailMainOnScroll(this)">
+                 ${images.map((im, i) => `
+                   <div class="detail-main-slide">
+                     <img
+                       src="${full(im)}"
+                       srcset="${fullSrcset(im)}"
+                       sizes="(min-width: 900px) 600px, 100vw"
+                       alt="${escapeAttr(p.name)} ${i+1}"
+                       loading="${i===0?'eager':'lazy'}"
+                       fetchpriority="${i===0?'high':'auto'}"
+                       draggable="false">
+                   </div>
+                 `).join('')}
+               </div>
+               ${images.length > 1 ? `
+                 <button class="detail-arrow detail-arrow-l" type="button" onclick="detailMainArrow(-1)" aria-label="上一張">‹</button>
+                 <button class="detail-arrow detail-arrow-r" type="button" onclick="detailMainArrow(1)" aria-label="下一張">›</button>
+                 <div class="detail-main-dots" id="detailMainDots">
+                   ${images.map((_, i) => `<span class="detail-main-dot ${i===selectedImageIdx?'active':''}"></span>`).join('')}
+                 </div>
+               ` : ''}
+              `
             : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;color:var(--text-mute);">👗</div>`
           }
         </div>
@@ -4423,6 +4523,14 @@ function renderDetail() {
       </div>
     </div>
   `;
+
+  // ★ v2.9.44 恢復 scroll 位置（切色後重 render 時）
+  requestAnimationFrame(() => {
+    const scrollEl = document.getElementById('detailMainScroll');
+    if (scrollEl && selectedImageIdx > 0) {
+      scrollEl.scrollLeft = selectedImageIdx * scrollEl.clientWidth;
+    }
+  });
 }
 
 // ============================================================
@@ -4467,8 +4575,35 @@ function getAvailableSizes(product, color) {
 // ★ M3 詳情頁互動
 // ============================================================
 function selectImage(idx) {
+  // ★ v2.9.44 詳情頁主圖改用 scroll — 點縮圖就 scroll 過去（不 re-render，否則滑動體驗爛）
   selectedImageIdx = idx;
-  renderDetail();
+  const scrollEl = document.getElementById('detailMainScroll');
+  if (scrollEl) {
+    scrollEl.scrollTo({ left: idx * scrollEl.clientWidth, behavior: 'smooth' });
+  }
+  // 更新 thumbs active 狀態（不整頁 re-render）
+  document.querySelectorAll('.detail-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.detail-main-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+// ★ v2.9.44 scroll 時更新 active（thumbs + dots）
+function detailMainOnScroll(scrollEl) {
+  if (!scrollEl) return;
+  const idx = Math.round(scrollEl.scrollLeft / scrollEl.clientWidth);
+  if (idx === selectedImageIdx) return;
+  selectedImageIdx = idx;
+  document.querySelectorAll('.detail-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.detail-main-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+// 點箭頭
+function detailMainArrow(dir) {
+  const scrollEl = document.getElementById('detailMainScroll');
+  if (!scrollEl) return;
+  const w = scrollEl.clientWidth;
+  const cur = Math.round(scrollEl.scrollLeft / w);
+  const slides = scrollEl.querySelectorAll('.detail-main-slide').length;
+  const next = Math.max(0, Math.min(slides - 1, cur + dir));
+  scrollEl.scrollTo({ left: next * w, behavior: 'smooth' });
 }
 
 function selectColor(color) {
