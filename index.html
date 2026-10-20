@@ -2478,8 +2478,9 @@ main {
 <!-- ===== HEADER ===== -->
 <header class="site-header">
   <div class="header-inner">
-    <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;" title="回到首頁">
-      <span class="brand-name">WanWan Selected<img id="brandHalloween" src="halloween.png" alt="" style="display:none;width:28px;height:28px;border-radius:50%;margin-left:6px;vertical-align:middle;filter:drop-shadow(0 1px 3px rgba(0,0,0,.2));"></span>
+    <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;flex-direction:row;align-items:center;gap:8px;" title="回到首頁">
+      <span class="brand-name">WanWan Selected</span>
+      <img id="brandHalloween" src="halloween.png" alt="" style="display:none;width:50px;height:50px;object-fit:contain;flex-shrink:0;">
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -2597,7 +2598,7 @@ main {
 <!-- Loading overlay（送單時） -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner" id="loadingSpinner"></div>
-  <img id="loadingHalloweenImg" src="halloween.png" alt="" style="display:none;width:180px;height:180px;border-radius:50%;animation:halloween-bob 2.4s ease-in-out infinite;filter:drop-shadow(0 6px 20px rgba(255,140,30,.4));">
+  <img id="loadingHalloweenImg" src="halloween.png" alt="" style="display:none;width:200px;height:200px;object-fit:contain;animation:halloween-bob 2.4s ease-in-out infinite;">
   <div id="loadingText">送出訂單中...</div>
 </div>
 
@@ -3788,7 +3789,7 @@ function renderProducts() {
     const now = new Date(); const _m = now.getMonth() + 1, _d = now.getDate();
     const isHl = (_m === 10 && _d >= 20) || (_m === 11 && _d <= 2);
     const indicator = isHl
-      ? `<img src="halloween.png" alt="" style="width:140px;height:140px;border-radius:50%;animation:halloween-bob 2.4s ease-in-out infinite;filter:drop-shadow(0 6px 18px rgba(255,140,30,.35));">`
+      ? `<img src="halloween.png" alt="" style="width:160px;height:160px;object-fit:contain;animation:halloween-bob 2.4s ease-in-out infinite;">`
       : `<div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--apricot-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;"></div>`;
     area.innerHTML = `
       <div class="empty-state" style="padding:50px 20px;text-align:center;">
