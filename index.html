@@ -558,20 +558,16 @@ main {
 /* ===== MOBILE TWEAKS ===== */
 @media (max-width: 480px) {
   .brand-name { font-size: 17px; letter-spacing: 1px; }
-  /* ★ v2.9.40 手機版：南瓜縮小 + 絕對定位疊在 Logo 右上，不佔 header 寬度 */
-  .brand { position: relative; }
+  /* ★ v2.9.41 手機版：南瓜改成 inline 模式但縮小，不要疊到文字 */
   #brandHalloween {
-    position: absolute !important;
-    top: -6px !important;
-    right: -18px !important;
-    width: 24px !important;
-    height: 24px !important;
-    margin: 0 !important;
-    pointer-events: none;
-    transform: rotate(10deg);
+    width: 22px !important;
+    height: 22px !important;
+    margin-left: 4px !important;
+    vertical-align: middle;
+    transform: translateY(-2px) rotate(8deg);
+    position: static !important;
   }
-  /* ★ v2.9.40 手機版蝙蝠縮小 + 更靠邊，不擋商品分類 */
-  #halloweenBats { width: 70px !important; height: 70px !important; }
+  /* 蝙蝠在手機版用預設 60x60 即可 */
   .brand-addr { font-size: 9.5px; margin-top: 2px; }
   .search-input { font-size: 13px; padding: 8px 12px 8px 32px; }
   .search-icon { left: 10px; font-size: 12px; }
@@ -581,7 +577,7 @@ main {
 
 @media (max-width: 380px) {
   .brand-name { font-size: 15px; }
-  #brandHalloween { width: 22px !important; height: 22px !important; top: -4px !important; right: -16px !important; }
+  #brandHalloween { width: 18px !important; height: 18px !important; margin-left: 3px !important; }
   .brand-addr { font-size: 9px; }
 }
 
@@ -2618,11 +2614,11 @@ main {
 </div>
 
 <!-- 🎃 萬聖節右上角飄浮小蝙蝠（10/20 - 11/02） -->
-<div id="halloweenBats" style="display:none;position:fixed;top:0;right:0;width:110px;height:70px;pointer-events:none;z-index:100;overflow:visible;">
-  <svg viewBox="0 0 32 32" width="22" height="22" style="position:absolute;top:12px;right:14px;color:#3d2a1a;animation:bat-fly-a 7s ease-in-out infinite;opacity:.68;" fill="currentColor">
+<div id="halloweenBats" style="display:none;position:fixed;top:4px;right:4px;width:60px;height:60px;pointer-events:none;z-index:100;overflow:visible;">
+  <svg id="hwBat1" viewBox="0 0 32 32" width="20" height="20" style="position:absolute;top:4px;right:4px;color:#3d2a1a;animation:bat-fly-a 7s ease-in-out infinite;opacity:.68;" fill="currentColor">
     <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
   </svg>
-  <svg viewBox="0 0 32 32" width="16" height="16" style="position:absolute;top:40px;right:60px;color:#3d2a1a;animation:bat-fly-b 9s ease-in-out infinite;opacity:.55;animation-delay:-2s;" fill="currentColor">
+  <svg id="hwBat2" viewBox="0 0 32 32" width="14" height="14" style="position:absolute;top:28px;right:28px;color:#3d2a1a;animation:bat-fly-b 9s ease-in-out infinite;opacity:.55;animation-delay:-2s;" fill="currentColor">
     <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
   </svg>
 </div>
