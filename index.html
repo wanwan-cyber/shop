@@ -558,6 +558,20 @@ main {
 /* ===== MOBILE TWEAKS ===== */
 @media (max-width: 480px) {
   .brand-name { font-size: 17px; letter-spacing: 1px; }
+  /* ★ v2.9.40 手機版：南瓜縮小 + 絕對定位疊在 Logo 右上，不佔 header 寬度 */
+  .brand { position: relative; }
+  #brandHalloween {
+    position: absolute !important;
+    top: -6px !important;
+    right: -18px !important;
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    pointer-events: none;
+    transform: rotate(10deg);
+  }
+  /* ★ v2.9.40 手機版蝙蝠縮小 + 更靠邊，不擋商品分類 */
+  #halloweenBats { width: 70px !important; height: 70px !important; }
   .brand-addr { font-size: 9.5px; margin-top: 2px; }
   .search-input { font-size: 13px; padding: 8px 12px 8px 32px; }
   .search-icon { left: 10px; font-size: 12px; }
@@ -567,6 +581,7 @@ main {
 
 @media (max-width: 380px) {
   .brand-name { font-size: 15px; }
+  #brandHalloween { width: 22px !important; height: 22px !important; top: -4px !important; right: -16px !important; }
   .brand-addr { font-size: 9px; }
 }
 
@@ -2603,11 +2618,11 @@ main {
 </div>
 
 <!-- 🎃 萬聖節右上角飄浮小蝙蝠（10/20 - 11/02） -->
-<div id="halloweenBats" style="display:none;position:fixed;top:0;right:0;width:150px;height:200px;pointer-events:none;z-index:100;overflow:visible;">
-  <svg viewBox="0 0 32 32" width="24" height="24" style="position:absolute;top:60px;right:30px;color:#3d2a1a;animation:bat-fly-a 7s ease-in-out infinite;opacity:.72;" fill="currentColor">
+<div id="halloweenBats" style="display:none;position:fixed;top:0;right:0;width:110px;height:70px;pointer-events:none;z-index:100;overflow:visible;">
+  <svg viewBox="0 0 32 32" width="22" height="22" style="position:absolute;top:12px;right:14px;color:#3d2a1a;animation:bat-fly-a 7s ease-in-out infinite;opacity:.68;" fill="currentColor">
     <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
   </svg>
-  <svg viewBox="0 0 32 32" width="18" height="18" style="position:absolute;top:110px;right:85px;color:#3d2a1a;animation:bat-fly-b 9s ease-in-out infinite;opacity:.6;animation-delay:-2s;" fill="currentColor">
+  <svg viewBox="0 0 32 32" width="16" height="16" style="position:absolute;top:40px;right:60px;color:#3d2a1a;animation:bat-fly-b 9s ease-in-out infinite;opacity:.55;animation-delay:-2s;" fill="currentColor">
     <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
   </svg>
 </div>
