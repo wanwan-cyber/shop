@@ -2479,7 +2479,7 @@ main {
 <header class="site-header">
   <div class="header-inner">
     <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;" title="回到首頁">
-      <span class="brand-name">WanWan Selected<span id="brandHalloween" style="display:none;font-size:0.78em;margin-left:5px;line-height:1;filter:drop-shadow(0 1px 2px rgba(255,140,30,.35));">🎃</span></span>
+      <span class="brand-name">WanWan Selected<img id="brandHalloween" src="halloween.png" alt="" style="display:none;width:28px;height:28px;border-radius:50%;margin-left:6px;vertical-align:middle;filter:drop-shadow(0 1px 3px rgba(0,0,0,.2));"></span>
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -5882,21 +5882,6 @@ updateMyOrdersBadge();
     loadingSpinner.style.display = 'none';
     loadingImg.style.display = 'block';
   }
-  // ★ v2.9.39 一鍵回頂部按鈕改用彩蛋圖當底
-  const backToTopFn = () => {
-    const btn = document.getElementById('back-to-top-btn');
-    if (!btn) return;
-    btn.style.width = '58px';
-    btn.style.height = '58px';
-    btn.style.background = "url('halloween.png') center/cover no-repeat";
-    btn.style.boxShadow = '0 4px 18px rgba(139,111,71,.45), inset 0 0 0 2.5px #fff';
-    btn.style.fontSize = '0'; // 隱藏 ↑ 符號
-    btn.innerHTML = '<span style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:linear-gradient(135deg,#8B6F47,#A68968);border:2px solid #fff;border-radius:50%;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.25);">↑</span>';
-    btn.title = '🎃 回到頂部';
-  };
-  // 按鈕可能還沒載入 → 延後執行
-  if (document.getElementById('back-to-top-btn')) backToTopFn();
-  else setTimeout(backToTopFn, 200);
 })();
 loadProducts().then(() => {
   // 商品載入完成後檢查 URL hash（用戶如果直接進入 #/product/xxx）
