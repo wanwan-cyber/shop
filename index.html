@@ -6361,17 +6361,31 @@ window.addEventListener('keydown', e => {
 // ============================================================
 loadCart();
 updateMyOrdersBadge();
-// 👗 搭配小劇場：URL 加 ?dev=1 開啟按鈕（Wan 自己測試用）
+// 👗 搭配小劇場按鈕控制（v2.9.47）
+// 顯示條件（任一成立）：
+//   1. URL 有 ?dev=1（Wan 自己測試用）
+//   2. localStorage 有 shop_dressup_enabled=1（曾經加過 dev 參數的本機）
+//   3. 雲端 Feature Flag dressupEnabled=true（POS 設定開放給全部客人）
 (function enableDressupBtn() {
+  const show = () => {
+    const btn = document.getElementById('dressupBtn');
+    if (btn) btn.style.display = '';
+  };
   try {
     if (location.search.includes('dev=1')) {
       localStorage.setItem('shop_dressup_enabled', '1');
     }
-    if (localStorage.getItem('shop_dressup_enabled') === '1') {
-      const btn = document.getElementById('dressupBtn');
-      if (btn) btn.style.display = '';
-    }
+    if (localStorage.getItem('shop_dressup_enabled') === '1') show();
   } catch(e) {}
+  // 從雲端讀 feature flag（非同步，不擋 render）
+  if (APPS_SCRIPT_URL) {
+    fetchWithTimeout(`${APPS_SCRIPT_URL}?action=getFeatureFlags&t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && data.flags && data.flags.dressupEnabled) show();
+      })
+      .catch(() => {});
+  }
 })();
 // 🎃 萬聖節裝飾（10/20 - 11/02 自動開啟）
 (function initHalloween() {
