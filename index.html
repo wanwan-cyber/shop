@@ -310,6 +310,92 @@ main {
   display: block;
 }
 
+/* ★ v2.9.43 商品卡片多圖輪播 */
+.card-image-scroll {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--cream-2);
+}
+.card-image-scroll::-webkit-scrollbar { display: none; }
+.card-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  cursor: pointer;
+  user-select: none;
+}
+.card-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  pointer-events: none; /* 讓 click 事件直接丟到父 slide */
+}
+.card-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  z-index: 3;
+  pointer-events: none;
+}
+.card-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.55);
+  box-shadow: 0 0 2px rgba(0,0,0,.35);
+  transition: all .2s;
+}
+.card-dot.active {
+  width: 16px;
+  border-radius: 3px;
+  background: #fff;
+}
+.card-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.85);
+  color: var(--wood);
+  border: none;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 3;
+  font-family: inherit;
+}
+.card-arrow-l { left: 6px; }
+.card-arrow-r { right: 6px; }
+.product-card:hover .card-arrow { opacity: .9; }
+.card-arrow:hover { background: #fff; opacity: 1 !important; }
+/* 手機不顯示箭頭（純用滑動）*/
+@media (hover: none) {
+  .card-arrow { display: none; }
+}
+
 .product-card:hover .card-image { transform: scale(1.06); }
 
 .card-image-placeholder {
@@ -3839,10 +3925,31 @@ function renderProducts() {
 function cardHtml(p) {
   const isPreorder = p.preorder === true;
   const soldOut = isPreorder ? false : (p.stock || 0) <= 0;
-  const img = (p.images && p.images[0]) || p.image || '';
-  const imgHtml = img
-    ? `<img class="card-image" src="${thumb(img)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👗</div>'">`
-    : `<div class="card-image-placeholder">👗</div>`;
+  // ★ v2.9.43 多張圖輪播（左右滑動 / 箭頭）
+  const allImgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  let imgHtml;
+  if (allImgs.length === 0) {
+    imgHtml = `<div class="card-image-placeholder">👗</div>`;
+  } else if (allImgs.length === 1) {
+    const u = allImgs[0];
+    imgHtml = `<img class="card-image" src="${thumb(u)}" alt="${escapeAttr(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👗</div>'">`;
+  } else {
+    // 多張 → scroll container，可左右滑動；桌機 hover 顯示箭頭
+    const slides = allImgs.map((u, i) => `
+      <div class="card-slide" onclick="openProduct('${p.id}')">
+        <img src="${thumb(u)}" alt="${escapeAttr(p.name)} ${i+1}" loading="${i===0?'eager':'lazy'}" draggable="false">
+      </div>
+    `).join('');
+    const dots = allImgs.map((_, i) => `<span class="card-dot ${i===0?'active':''}"></span>`).join('');
+    imgHtml = `
+      <div class="card-image-scroll" data-card-id="${p.id}" onscroll="cardImageOnScroll(this)" onclick="event.stopPropagation()">
+        ${slides}
+      </div>
+      <div class="card-dots">${dots}</div>
+      <button class="card-arrow card-arrow-l" type="button" onclick="event.stopPropagation();cardImageArrow('${p.id}', -1)" aria-label="上一張">‹</button>
+      <button class="card-arrow card-arrow-r" type="button" onclick="event.stopPropagation();cardImageArrow('${p.id}', 1)" aria-label="下一張">›</button>
+    `;
+  }
   const soldBadge = soldOut ? `<div class="sold-badge">SOLD OUT</div>` : '';
   // ★ v2.9.35 商品卡片預購徽章 — 只在「整個商品都是預購」時顯示
   // （有單色/單規格預購的商品不標，客人點進去才看到）
@@ -3864,8 +3971,11 @@ function cardHtml(p) {
       return ic === c;
     });
     const hasImg = colorImgIdx >= 0 && imgs[colorImgIdx];
+    // ★ v2.9.43 多圖商品 → 點色點 scroll 到對應圖；單圖商品維持 preview src 行為
     const handlers = hasImg
-      ? ` onmouseenter="cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')" onmouseleave="cardPreviewReset('${p.id}')" onclick="event.stopPropagation();cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')"`
+      ? (imgs.length > 1
+        ? ` onclick="event.stopPropagation();cardImageScrollToIdx('${p.id}', ${colorImgIdx})"`
+        : ` onmouseenter="cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')" onmouseleave="cardPreviewReset('${p.id}')" onclick="event.stopPropagation();cardPreviewColor('${p.id}', '${escapeAttr(imgs[colorImgIdx])}')"`)
       : '';
     const extraStyle = hasImg ? 'cursor:pointer;outline:1px solid rgba(201,168,76,.3);outline-offset:1px;' : '';
     return `<span class="color-dot" style="background:${hex};${border}${extraStyle}" title="${escapeAttr(c)}${hasImg ? '（點看圖）' : ''}"${handlers}></span>`;
@@ -3884,6 +3994,32 @@ function cardHtml(p) {
       </div>
     </article>
   `;
+}
+
+// ★ v2.9.43 商品卡片多圖輪播：scroll 時更新圓點
+function cardImageOnScroll(scrollEl) {
+  if (!scrollEl) return;
+  const idx = Math.round(scrollEl.scrollLeft / scrollEl.clientWidth);
+  const wrap = scrollEl.parentElement;
+  if (!wrap) return;
+  const dots = wrap.querySelectorAll('.card-dot');
+  dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+// 點箭頭切換
+function cardImageArrow(pid, dir) {
+  const scrollEl = document.querySelector(`.card-image-scroll[data-card-id="${pid}"]`);
+  if (!scrollEl) return;
+  const w = scrollEl.clientWidth;
+  const cur = Math.round(scrollEl.scrollLeft / w);
+  const slides = scrollEl.querySelectorAll('.card-slide').length;
+  const next = Math.max(0, Math.min(slides - 1, cur + dir));
+  scrollEl.scrollTo({ left: next * w, behavior: 'smooth' });
+}
+// 點色點 scroll 到對應圖
+function cardImageScrollToIdx(pid, idx) {
+  const scrollEl = document.querySelector(`.card-image-scroll[data-card-id="${pid}"]`);
+  if (!scrollEl) return;
+  scrollEl.scrollTo({ left: idx * scrollEl.clientWidth, behavior: 'smooth' });
 }
 
 // ★ v2.9.15 商品卡片 — 滑過/點顏色預覽對應圖片
