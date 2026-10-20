@@ -12,14 +12,16 @@
 <meta property="og:description" content="WANWAN SELECTED｜✦精選現貨為主・快速出貨">
 <meta property="og:url" content="https://wanwan-cyber.github.io/shop/">
 <meta property="og:site_name" content="WANWAN SELECTED">
-<meta property="og:image" content="https://wanwan-cyber.github.io/shop/og-image.png">
+<meta property="og:image" content="https://wanwan-cyber.github.io/shop/og-image.jpg">
+<meta property="og:image:secure_url" content="https://wanwan-cyber.github.io/shop/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="WANWAN SELECTED">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="WANWAN SELECTED">
 <meta name="twitter:description" content="WANWAN SELECTED｜✦精選現貨為主・快速出貨">
-<meta name="twitter:image" content="https://wanwan-cyber.github.io/shop/og-image.png">
+<meta name="twitter:image" content="https://wanwan-cyber.github.io/shop/og-image.jpg">
 <style>
 :root {
   --cream: #FAF3EB;
@@ -2601,6 +2603,150 @@ main {
 .bc-figure-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 .bc-hotspot { pointer-events: auto; }
 .bc-figure-tip { margin-top: 14px; padding: 10px 14px; background: linear-gradient(135deg, rgba(232,181,135,.15), rgba(232,181,135,.05)); border: 1px solid rgba(232,181,135,.35); border-radius: 10px; font-size: 11.5px; color: var(--text-soft, #7C6E5F); text-align: center; line-height: 1.6; }
+
+/* ★ v2.9.46 搭配小劇場 */
+.dressup-stage {
+  position: relative;
+  max-width: 320px;
+  height: 440px;
+  margin: 0 auto 20px;
+  background: linear-gradient(180deg, #fff, var(--cream-2));
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.dressup-figure {
+  position: absolute;
+  inset: 20px;
+  width: calc(100% - 40px);
+  height: calc(100% - 40px);
+  color: rgba(139, 111, 71, .18);
+  pointer-events: none;
+}
+.dressup-slot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dressup-slot img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.15));
+}
+#dressupTopSlot { top: 18%; left: 12%; right: 12%; height: 28%; }
+#dressupBotSlot { top: 46%; left: 20%; right: 20%; height: 32%; }
+#dressupCoatSlot { top: 15%; right: 2%; width: 32%; height: 35%; }
+#dressupAccSlot { top: 78%; left: 30%; right: 30%; height: 18%; }
+
+.dressup-picker-section {
+  margin-bottom: 14px;
+}
+.dressup-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+.dressup-picker-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--wood);
+}
+.dressup-picker-selected {
+  font-size: 11px;
+  color: var(--text-mute);
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dressup-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  gap: 8px;
+  padding: 4px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.dressup-scroll::-webkit-scrollbar { display: none; }
+.dressup-item {
+  flex: 0 0 92px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--cream-3);
+  border: 2px solid transparent;
+  transition: border-color .15s, transform .15s;
+}
+.dressup-item:active { transform: scale(.96); }
+.dressup-item.selected {
+  border-color: var(--wood);
+  box-shadow: 0 2px 8px rgba(139,111,71,.25);
+}
+.dressup-item img { width: 100%; height: 110px; object-fit: cover; display: block; }
+.dressup-item-info { padding: 4px 6px 6px; }
+.dressup-item-info .n { font-size: 10px; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dressup-item-info .p { font-size: 11px; color: var(--wood); font-weight: 700; margin-top: 1px; }
+.dressup-item-empty .empty-ph {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--cream-2), var(--cream-3));
+  color: var(--text-mute);
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.5;
+  padding: 0 8px;
+}
+.dressup-footer {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(250,243,235,.7), var(--cream) 30%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 14px 10px;
+  margin: 10px -10px -10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 5;
+}
+.dressup-buy-btn {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--wood), var(--apricot-deep));
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 1px;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(139,111,71,.3);
+  flex-shrink: 0;
+}
+.dressup-buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.dressup-random-btn {
+  padding: 10px 16px;
+  background: var(--cream-2);
+  color: var(--wood);
+  border: 1.5px solid var(--wood);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
 /* 🎃 萬聖節裝飾動畫（v2.9.37） */
 @keyframes pumpkin-bounce {
   0%,100% { transform: translateY(0) rotate(-6deg); }
@@ -2719,6 +2865,9 @@ body.halloween-mode .product-card:active {
     <button class="cart-btn" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
       📏
     </button>
+    <button class="cart-btn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場">
+      👗
+    </button>
     <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
       📮
       <span class="cart-badge" id="myOrdersBadge" data-count="0"></span>
@@ -2823,6 +2972,8 @@ body.halloween-mode .product-card:active {
   <section class="success-page" id="successPage"></section>
   <section class="checkout-page" id="myOrdersPage"></section>
   <section class="checkout-page" id="bodyCheckPage"></section>
+  <!-- 👗 搭配小劇場 (v2.9.46) -->
+  <section class="checkout-page" id="dressupPage"></section>
 </main>
 
 <!-- Loading overlay（送單時） -->
@@ -3987,7 +4138,7 @@ function setCat(cat) {
   currentCat = cat;
   // ★ 修 bug：手動切回商品列表頁（避免在詳情/結帳/成功/我的訂單頁時點分類看不到反應）
   document.getElementById('pageList').classList.remove('hidden');
-  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage'].forEach(id => {
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -4194,7 +4345,7 @@ function clearAllFilters() {
   document.getElementById('searchInput').value = '';
   // ★ 修 bug：手動切回商品列表頁
   document.getElementById('pageList').classList.remove('hidden');
-  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage'].forEach(id => {
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -4334,6 +4485,15 @@ function handleRoute() {
   if (hash === '#/body-check') {
     renderBodyCheck();
     if (bodyCheckEl) bodyCheckEl.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+
+  // 👗 搭配小劇場 (v2.9.46)
+  if (hash === '#/dressup') {
+    renderDressup();
+    const el = document.getElementById('dressupPage');
+    if (el) el.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'instant' });
     return;
   }
@@ -6172,7 +6332,7 @@ document.getElementById('searchInput').addEventListener('input', e => {
     // ★ 修 bug：搜尋時如果不在列表頁就切回來
     if (location.hash || document.getElementById('pageList').classList.contains('hidden')) {
       document.getElementById('pageList').classList.remove('hidden');
-      ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage'].forEach(id => {
+      ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
       });
@@ -6328,6 +6488,212 @@ function onBannerClick(i) {
 // ============================================================================
 function goBodyCheck() {
   location.hash = '#/body-check';
+}
+
+// ============================================================
+// 👗 搭配小劇場 (v2.9.46)
+// ============================================================
+function goDressup() {
+  location.hash = '#/dressup';
+}
+
+let dressupState = { top: null, bot: null, coat: null, acc: null };
+
+// 分類對應（按 Wan 現有的分類：上衣/小可愛/短褲/長褲/短裙/長裙/外搭背心/配件/襯衫|外套/套裝/長洋）
+const DRESSUP_CAT_MAP = {
+  top:  ['上衣', '小可愛', '長洋', '套裝', '襯衫|外套'],
+  bot:  ['短褲', '長褲', '短裙', '長裙'],
+  coat: ['外搭背心'],
+  acc:  ['配件'],
+};
+const DRESSUP_LABELS = { top: '👚 上衣／連身', bot: '👖 下身', coat: '🧥 外搭', acc: '✨ 配件' };
+
+function getDressupPool(slot) {
+  const cats = DRESSUP_CAT_MAP[slot] || [];
+  return allProducts.filter(p => p.onlineShop === true && cats.includes(p.cat)
+    && (hasAnyPreorder(p) || (p.stock || 0) > 0));
+}
+
+function renderDressup() {
+  const el = document.getElementById('dressupPage');
+  if (!el) return;
+  const slots = ['top', 'bot', 'coat', 'acc'];
+
+  el.innerHTML = `
+    <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
+    <h1 class="checkout-title" style="text-align:center;">👗 搭配小劇場</h1>
+    <p style="color:var(--text-mute);font-size:12.5px;margin-bottom:14px;text-align:center;line-height:1.6;">
+      分區選商品，看自己的搭配組合 ✨<br>
+      看中整套可以一鍵加入購物車
+    </p>
+
+    <!-- 人形舞台 -->
+    <div class="dressup-stage">
+      <svg class="dressup-figure" viewBox="0 0 100 180" preserveAspectRatio="xMidYMid meet" fill="currentColor">
+        <ellipse cx="50" cy="18" rx="10" ry="12"/>
+        <path d="M 40 30 Q 30 42, 32 60 L 36 85 L 36 115 L 40 170 L 48 170 L 46 125 L 50 100 L 54 125 L 52 170 L 60 170 L 64 115 L 64 85 L 68 60 Q 70 42, 60 30 Z"/>
+      </svg>
+      <div id="dressupTopSlot" class="dressup-slot"></div>
+      <div id="dressupBotSlot" class="dressup-slot"></div>
+      <div id="dressupCoatSlot" class="dressup-slot"></div>
+      <div id="dressupAccSlot" class="dressup-slot"></div>
+    </div>
+
+    <div style="text-align:center;margin:-10px 0 16px;">
+      <button class="dressup-random-btn" onclick="dressupRandomize()">🎲 隨機搭配</button>
+      <button class="dressup-random-btn" onclick="dressupClearAll()" style="margin-left:6px;background:transparent;border-style:dashed;">清空</button>
+    </div>
+
+    ${slots.map(s => {
+      const pool = getDressupPool(s);
+      const label = DRESSUP_LABELS[s];
+      const slotId = s.charAt(0).toUpperCase() + s.slice(1);
+      return `
+        <div class="dressup-picker-section">
+          <div class="dressup-picker-header">
+            <span class="dressup-picker-title">${label} <span style="color:var(--text-mute);font-size:11px;font-weight:400;">(${pool.length})</span></span>
+            <span class="dressup-picker-selected" id="dressup${slotId}Name">（未選）</span>
+          </div>
+          <div class="dressup-scroll" data-slot="${s}">
+            <div class="dressup-item dressup-item-empty" onclick="dressupPick('${s}', null)">
+              <div class="empty-ph">不選<br>${label.split(' ')[1] || ''}</div>
+              <div class="dressup-item-info"><div class="n">　</div></div>
+            </div>
+            ${pool.map(p => {
+              const img = (p.images && p.images[0]) || p.image || '';
+              return `
+                <div class="dressup-item" data-pid="${p.id}" onclick="dressupPick('${s}', '${p.id}')">
+                  ${img
+                    ? `<img src="${thumb(img)}" alt="${escapeAttr(p.name)}" loading="lazy">`
+                    : `<div class="empty-ph">👗</div>`}
+                  <div class="dressup-item-info">
+                    <div class="n">${escapeHtml(p.name)}</div>
+                    <div class="p">NT$${(p.price || 0).toLocaleString()}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('')}
+
+    <div class="dressup-footer">
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--text-mute);">目前搭配 <span id="dressupCount">0</span> 件</div>
+        <div style="font-size:22px;font-weight:800;color:var(--wood);line-height:1.2;"><span style="font-size:13px;">NT$</span><span id="dressupTotal">0</span></div>
+      </div>
+      <button class="dressup-buy-btn" id="dressupBuyBtn" onclick="dressupAddAllToCart()" disabled>🛒 全部加入購物車</button>
+    </div>
+  `;
+
+  // 初始化顯示
+  slots.forEach(s => updateDressupSlot(s));
+  updateDressupSummary();
+}
+
+function dressupPick(slot, pid) {
+  dressupState[slot] = pid;
+  updateDressupSlot(slot);
+  updateDressupSummary();
+  // 更新 selected 樣式
+  const scrollEl = document.querySelector(`.dressup-scroll[data-slot="${slot}"]`);
+  if (scrollEl) {
+    scrollEl.querySelectorAll('.dressup-item').forEach(el => el.classList.remove('selected'));
+    if (pid) {
+      const sel = scrollEl.querySelector(`.dressup-item[data-pid="${pid}"]`);
+      if (sel) sel.classList.add('selected');
+    } else {
+      const empty = scrollEl.querySelector('.dressup-item-empty');
+      if (empty) empty.classList.add('selected');
+    }
+  }
+  // 更新品名
+  const slotId = slot.charAt(0).toUpperCase() + slot.slice(1);
+  const nameEl = document.getElementById(`dressup${slotId}Name`);
+  if (nameEl) {
+    const p = pid ? allProducts.find(x => x.id === pid) : null;
+    nameEl.textContent = p ? `${p.name} · NT$${(p.price || 0).toLocaleString()}` : '（未選）';
+  }
+}
+
+function updateDressupSlot(slot) {
+  const slotId = slot.charAt(0).toUpperCase() + slot.slice(1);
+  const slotEl = document.getElementById(`dressup${slotId}Slot`);
+  if (!slotEl) return;
+  const pid = dressupState[slot];
+  if (!pid) {
+    slotEl.innerHTML = '';
+    return;
+  }
+  const p = allProducts.find(x => x.id === pid);
+  if (!p) { slotEl.innerHTML = ''; return; }
+  const img = (p.images && p.images[0]) || p.image || '';
+  slotEl.innerHTML = img ? `<img src="${thumb(img)}" alt="">` : '';
+}
+
+function updateDressupSummary() {
+  const slots = ['top', 'bot', 'coat', 'acc'];
+  let total = 0, count = 0;
+  slots.forEach(s => {
+    const pid = dressupState[s];
+    if (!pid) return;
+    const p = allProducts.find(x => x.id === pid);
+    if (!p) return;
+    total += p.price || 0;
+    count++;
+  });
+  const totalEl = document.getElementById('dressupTotal');
+  const countEl = document.getElementById('dressupCount');
+  const btn = document.getElementById('dressupBuyBtn');
+  if (totalEl) totalEl.textContent = total.toLocaleString();
+  if (countEl) countEl.textContent = count;
+  if (btn) btn.disabled = count === 0;
+}
+
+function dressupRandomize() {
+  const slots = ['top', 'bot', 'coat', 'acc'];
+  slots.forEach(s => {
+    const pool = getDressupPool(s);
+    if (pool.length === 0) return;
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    dressupPick(s, p.id);
+  });
+  toast('🎲 隨機搭配好了！不滿意再換');
+}
+
+function dressupClearAll() {
+  const slots = ['top', 'bot', 'coat', 'acc'];
+  slots.forEach(s => dressupPick(s, null));
+  toast('已清空');
+}
+
+async function dressupAddAllToCart() {
+  const slots = ['top', 'bot', 'coat', 'acc'];
+  let added = 0;
+  let skipped = [];
+  slots.forEach(s => {
+    const pid = dressupState[s];
+    if (!pid) return;
+    const p = allProducts.find(x => x.id === pid);
+    if (!p) return;
+    // 預設第一色、第一尺寸（如果有）
+    const color = (p.colors && p.colors[0]) || '';
+    const size = (p.sizes && p.sizes[0]) || '';
+    const stock = getVariantStock(p, color, size);
+    if (stock > 0) {
+      addToCart(p, color, size, 1);
+      added++;
+    } else {
+      skipped.push(p.name);
+    }
+  });
+  if (added > 0) {
+    toast(`✨ 已把 ${added} 件搭配加入購物車${skipped.length ? '（' + skipped.length + ' 件規格待選）' : ''}`);
+    setTimeout(() => { location.hash = ''; setTimeout(openCart, 200); }, 400);
+  } else {
+    toast('沒有可加入的商品，請先選商品');
+  }
 }
 function renderBodyCheck() {
   const el = document.getElementById('bodyCheckPage');
