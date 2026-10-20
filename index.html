@@ -2479,8 +2479,7 @@ main {
 <header class="site-header">
   <div class="header-inner">
     <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;" title="回到首頁">
-      <span class="brand-name">WanWan Selected</span>
-      <span id="brandHalloween" style="display:none;font-size:17px;margin-left:4px;line-height:1;vertical-align:-1px;filter:drop-shadow(0 1px 2px rgba(255,140,30,.35));">🎃</span>
+      <span class="brand-name">WanWan Selected<span id="brandHalloween" style="display:none;font-size:0.78em;margin-left:5px;line-height:1;filter:drop-shadow(0 1px 2px rgba(255,140,30,.35));">🎃</span></span>
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -3029,6 +3028,7 @@ async function loadProducts() {
   if (!APPS_SCRIPT_URL) {
     // 還沒接 Apps Script
     allProducts = MOCK_PRODUCTS;
+    window._productsLoadedOnce = true; // ★ v2.9.38
     document.getElementById('demoBanner').style.display = 'block';
     render();
     return;
@@ -3038,6 +3038,7 @@ async function loadProducts() {
     const data = await res.json();
     if (data && data.ok && Array.isArray(data.products)) {
       allProducts = data.products;
+      window._productsLoadedOnce = true; // ★ v2.9.38
       document.getElementById('demoBanner').style.display = 'none';
       render();
     } else {
@@ -3046,6 +3047,7 @@ async function loadProducts() {
   } catch (err) {
     console.warn('無法載入商品，改用 mock 資料', err);
     allProducts = MOCK_PRODUCTS;
+    window._productsLoadedOnce = true; // ★ v2.9.38
     document.getElementById('demoBanner').style.display = 'block';
     document.getElementById('demoBanner').innerHTML = '<strong>⚠️ 展示模式</strong>：無法連線到伺服器，顯示範例商品';
     render();
@@ -3779,6 +3781,23 @@ function renderProducts() {
   const list = getFilteredProducts();
   const area = document.getElementById('productArea');
   const count = document.getElementById('resultCount');
+
+  // ★ v2.9.38 商品還沒載入完 → 顯示 loading 畫面而非「找不到商品」
+  if (!window._productsLoadedOnce && allProducts.length === 0) {
+    count.innerHTML = '';
+    const now = new Date(); const _m = now.getMonth() + 1, _d = now.getDate();
+    const isHl = (_m === 10 && _d >= 20) || (_m === 11 && _d <= 2);
+    const indicator = isHl
+      ? `<img src="halloween.png" alt="" style="width:140px;height:140px;border-radius:50%;animation:halloween-bob 2.4s ease-in-out infinite;filter:drop-shadow(0 6px 18px rgba(255,140,30,.35));">`
+      : `<div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--apricot-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;"></div>`;
+    area.innerHTML = `
+      <div class="empty-state" style="padding:50px 20px;text-align:center;">
+        ${indicator}
+        <h3 style="color:var(--text-mute);margin-top:16px;font-weight:600;">商品載入中...</h3>
+        <p style="color:var(--text-mute);font-size:12px;">${isHl ? '🎃 女巫正在幫你準備中' : '請稍等'}</p>
+      </div>`;
+    return;
+  }
 
   if (list.length === 0) {
     count.innerHTML = '';
