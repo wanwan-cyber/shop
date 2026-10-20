@@ -3982,7 +3982,11 @@ function cardHtml(p) {
   }).join('');
 
   // ★ v2.9.15 卡片 img 加 data-card-id 讓 preview handlers 找得到
-  const imgHtmlWithId = imgHtml.replace('<img class="card-image"', `<img class="card-image" data-card-id="${p.id}" data-original-src="${thumb(img)}"`);
+  // ★ v2.9.43 單圖 case 才加 data-card-id（多圖 case 用 scroll container 的 data-card-id）
+  const _firstImg = allImgs[0] || '';
+  const imgHtmlWithId = _firstImg
+    ? imgHtml.replace('<img class="card-image"', `<img class="card-image" data-card-id="${p.id}" data-original-src="${thumb(_firstImg)}"`)
+    : imgHtml;
 
   return `
     <article class="product-card ${soldOut ? 'sold-out' : ''}" onclick="openProduct('${p.id}')">
