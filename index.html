@@ -2756,6 +2756,450 @@ main {
   0%,100% { transform: translateY(0) rotate(-2deg) scale(1); }
   50% { transform: translateY(-10px) rotate(2deg) scale(1.03); }
 }
+
+/* ★ v2.9.48 🎨 色彩心理測驗 */
+.ct-hero {
+  text-align: center;
+  padding: 10px 10px 24px;
+  margin-bottom: 8px;
+}
+.ct-hero-emoji {
+  font-size: 56px;
+  margin-bottom: 6px;
+  animation: ct-float 3s ease-in-out infinite;
+}
+@keyframes ct-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-8px) rotate(4deg); }
+}
+.ct-hero-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin: 0 0 10px;
+  letter-spacing: 1px;
+}
+.ct-hero-sub {
+  font-size: 13.5px;
+  color: var(--text-soft, #7C6E5F);
+  line-height: 1.8;
+  margin: 0;
+}
+/* 色系分組 */
+.ct-families {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 2px 20px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.ct-family {
+  background: var(--cream-2, #faf6ef);
+  border: 1px solid var(--border, #e8ddc8);
+  border-radius: 16px;
+  padding: 12px 12px 14px;
+}
+.ct-family-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin-bottom: 10px;
+  padding-left: 4px;
+  letter-spacing: 1px;
+}
+.ct-family-icon { font-size: 18px; }
+.ct-sub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.ct-family:has(.ct-sub-tile:nth-child(4)) .ct-sub-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 480px) {
+  .ct-family:has(.ct-sub-tile:nth-child(4)) .ct-sub-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.ct-sub-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,.08), inset 0 1px 2px rgba(255,255,255,.3);
+  transition: transform .2s ease, box-shadow .2s ease;
+  overflow: hidden;
+  min-height: 70px;
+}
+.ct-sub-tile:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 18px rgba(0,0,0,.15), inset 0 1px 2px rgba(255,255,255,.4);
+}
+.ct-sub-tile:active { transform: translateY(-1px) scale(.98); }
+.ct-sub-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 55%;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), transparent);
+  pointer-events: none;
+  border-radius: 14px 14px 0 0;
+}
+.ct-sub-tile-name {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.12);
+  padding: 2px 4px;
+}
+.ct-footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-mute, #a89981);
+  margin: 20px 0 10px;
+  letter-spacing: .5px;
+}
+
+/* 結果頁 */
+.ct-result-hero {
+  position: relative;
+  border-radius: 24px;
+  padding: 32px 24px 28px;
+  text-align: center;
+  margin: 8px 0 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12), inset 0 1px 2px rgba(255,255,255,.3);
+  overflow: hidden;
+}
+.ct-result-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 60%;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), transparent);
+  pointer-events: none;
+}
+.ct-result-emoji {
+  font-size: 72px;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.2));
+  animation: ct-float 3s ease-in-out infinite;
+}
+.ct-result-label {
+  font-size: 12px;
+  opacity: .85;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.ct-result-name {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.ct-result-meaning {
+  font-size: 14px;
+  line-height: 1.7;
+  opacity: .95;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.18);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.ct-info-card {
+  background: var(--cream-2, #faf6ef);
+  border: 1px solid var(--border, #e8ddc8);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.ct-info-label {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+.ct-info-text {
+  font-size: 13px;
+  color: var(--text-soft, #7C6E5F);
+  line-height: 1.75;
+}
+.ct-subs-title {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin: 20px 0 12px;
+  letter-spacing: 2px;
+}
+.ct-subs { display: flex; flex-direction: column; gap: 12px; }
+.ct-sub {
+  background: #fff;
+  border: 1px solid var(--border, #e8ddc8);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(139,111,71,.06);
+}
+.ct-sub-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border, #e8ddc8);
+}
+.ct-sub-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.ct-sub-row:last-child { margin-bottom: 0; }
+.ct-sub-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+.ct-tag-like {
+  background: linear-gradient(135deg, #E8B587, #D49768);
+  color: #fff;
+}
+.ct-tag-dislike {
+  background: #f3ede1;
+  color: #9a8569;
+}
+.ct-sub-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text-soft, #5d5141);
+}
+.ct-actions {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0 10px;
+}
+.ct-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.ct-btn:active { transform: scale(.97); }
+.ct-btn-outline {
+  background: #fff;
+  color: var(--wood, #8b6f47);
+  border: 1.5px solid var(--border, #e8ddc8);
+}
+.ct-btn-primary {
+  background: linear-gradient(135deg, var(--apricot-deep, #D49768), var(--apricot, #E8B587));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(212,151,104,.35);
+}
+/* 步驟指示 */
+.ct-step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 18px;
+}
+.ct-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f0e8d9;
+  color: #a89981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1.5px solid var(--border, #e8ddc8);
+  transition: all .3s ease;
+}
+.ct-step-current {
+  background: linear-gradient(135deg, var(--apricot-deep, #D49768), var(--apricot, #E8B587));
+  color: #fff;
+  border-color: var(--apricot-deep, #D49768);
+  box-shadow: 0 2px 8px rgba(212,151,104,.4);
+  transform: scale(1.1);
+}
+.ct-step-done {
+  background: #a8d8a8;
+  color: #fff;
+  border-color: #8bc78b;
+}
+.ct-step-line {
+  width: 50px;
+  height: 2px;
+  background: var(--border, #e8ddc8);
+}
+.ct-step-line-done { background: #a8d8a8; }
+.ct-step-title {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--wood, #8b6f47);
+  margin: 0 0 18px;
+  letter-spacing: 1px;
+}
+.ct-step-title b { font-weight: 900; color: var(--apricot-deep, #D49768); }
+
+/* 已選的色 chip */
+.ct-picked-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.ct-picked-label {
+  font-size: 13px;
+  color: var(--text-soft, #7C6E5F);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.ct-picked-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.12);
+}
+
+/* 結果雙色卡 */
+.ct-result-combo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 8px 0 20px;
+}
+.ct-result-side {
+  position: relative;
+  border-radius: 20px;
+  padding: 22px 12px 20px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.12), inset 0 1px 2px rgba(255,255,255,.3);
+  overflow: hidden;
+}
+.ct-result-side::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 55%;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), transparent);
+  pointer-events: none;
+}
+.ct-result-side-tag {
+  font-size: 11px;
+  opacity: .9;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.ct-result-side-emoji {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.18));
+}
+.ct-result-side-fam {
+  font-size: 12px;
+  opacity: .85;
+  margin: 10px 0 4px;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.ct-result-side-name {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+
+/* 章節標題（喜歡／不喜歡） */
+.ct-section-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  margin: 18px 0 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  letter-spacing: 1.5px;
+}
+.ct-section-like {
+  background: linear-gradient(135deg, rgba(242,107,122,.1), rgba(232,181,135,.1));
+  color: #c75668;
+  border: 1px solid rgba(242,107,122,.2);
+}
+.ct-section-dis {
+  background: linear-gradient(135deg, rgba(136,181,221,.1), rgba(119,160,200,.1));
+  color: #5a7fa8;
+  border: 1px solid rgba(136,181,221,.2);
+}
+
+/* 小卡（簡化版 sub） */
+.ct-sub-mini {
+  background: #fff;
+  border: 1px solid var(--border, #e8ddc8);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(139,111,71,.05);
+}
+.ct-sub-mini-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--wood, #8b6f47);
+  margin-bottom: 6px;
+}
+.ct-sub-mini-text {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text-soft, #5d5141);
+}
+
+/* 分隔線 */
+.ct-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border, #e8ddc8), transparent);
+  margin: 26px 0 10px;
+}
+
+@media (max-width: 380px) {
+  .ct-tile-icon { font-size: 42px; }
+  .ct-tile-name { font-size: 15px; }
+  .ct-result-name { font-size: 26px; }
+  .ct-result-emoji { font-size: 60px; }
+  .ct-result-side-name { font-size: 17px; }
+  .ct-result-side-emoji { font-size: 38px; }
+  .ct-step-title { font-size: 15px; }
+}
+
 /* ★ v2.9.42/45 萬聖節 — 商品卡片都有淡橘色外光（手機也看得到），hover/tap 更亮 */
 body.halloween-mode .product-card {
   border-color: rgba(255,140,30,.18);
@@ -2864,6 +3308,10 @@ body.halloween-mode .product-card:active {
     </div>
     <button class="cart-btn" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
       📏
+    </button>
+    <!-- 🎨 色彩心理測驗 (v2.9.48) -->
+    <button class="cart-btn" onclick="goColorTest()" aria-label="色彩心理測驗" title="色彩心理測驗">
+      🎨
     </button>
     <!-- 👗 搭配小劇場按鈕（開發中隱藏，Wan 自己調整完畢再開放） -->
     <button class="cart-btn" id="dressupBtn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場" style="display:none;">
@@ -2975,6 +3423,8 @@ body.halloween-mode .product-card:active {
   <section class="checkout-page" id="bodyCheckPage"></section>
   <!-- 👗 搭配小劇場 (v2.9.46) -->
   <section class="checkout-page" id="dressupPage"></section>
+  <!-- 🎨 色彩心理測驗 (v2.9.48) -->
+  <section class="checkout-page" id="colorTestPage"></section>
 </main>
 
 <!-- Loading overlay（送單時） -->
@@ -3799,12 +4249,22 @@ function renderModelPhotosSection(p) {
               ${escapeHtml(info.label)} <span style="opacity:.85;font-weight:500;font-size:11px;">${escapeHtml(info.desc)}</span>
             </div>
             <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">
-              ${groups[type].map(m => `
-                <div style="flex-shrink:0;width:132px;cursor:pointer;" onclick="openModelPhotoLightbox('${escapeAttr(m.url)}', '${escapeAttr(info.label + (m.note ? ' · ' + m.note : ''))}')">
-                  <div style="width:132px;height:176px;border-radius:10px;background:url('${escapeAttr(m.url)}') center/cover;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.06);"></div>
-                  ${m.note ? `<div style="font-size:11px;color:var(--text-soft,#7C6E5F);margin-top:4px;text-align:center;line-height:1.4;">${escapeHtml(m.note)}</div>` : ''}
-                </div>
-              `).join('')}
+              ${groups[type].map(m => {
+                // ★ v2.9.49 結構化資訊：身高/體重/尺碼
+                const stats = [];
+                if (m.height) stats.push(`${m.height}cm`);
+                if (m.weight) stats.push(`${m.weight}kg`);
+                if (m.wearSize) stats.push(`穿${m.wearSize}`);
+                const statsStr = stats.join(' · ');
+                const lightboxCaption = info.label + (statsStr ? ' · ' + statsStr : '') + (m.note ? ' · ' + m.note : '');
+                return `
+                  <div style="flex-shrink:0;width:132px;cursor:pointer;" onclick="openModelPhotoLightbox('${escapeAttr(m.url)}', '${escapeAttr(lightboxCaption)}')">
+                    <div style="width:132px;height:176px;border-radius:10px;background:url('${escapeAttr(m.url)}') center/cover;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.06);"></div>
+                    ${statsStr ? `<div style="font-size:11px;color:var(--wood,#8B6F47);margin-top:4px;text-align:center;line-height:1.4;font-weight:600;">${escapeHtml(statsStr)}</div>` : ''}
+                    ${m.note ? `<div style="font-size:10.5px;color:var(--text-soft,#7C6E5F);margin-top:2px;text-align:center;line-height:1.4;">${escapeHtml(m.note)}</div>` : ''}
+                  </div>
+                `;
+              }).join('')}
             </div>
           </div>
         `;
@@ -4139,7 +4599,7 @@ function setCat(cat) {
   currentCat = cat;
   // ★ 修 bug：手動切回商品列表頁（避免在詳情/結帳/成功/我的訂單頁時點分類看不到反應）
   document.getElementById('pageList').classList.remove('hidden');
-  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage', 'colorTestPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -4346,7 +4806,7 @@ function clearAllFilters() {
   document.getElementById('searchInput').value = '';
   // ★ 修 bug：手動切回商品列表頁
   document.getElementById('pageList').classList.remove('hidden');
-  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
+  ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage', 'colorTestPage'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -4494,6 +4954,15 @@ function handleRoute() {
   if (hash === '#/dressup') {
     renderDressup();
     const el = document.getElementById('dressupPage');
+    if (el) el.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+
+  // 🎨 色彩心理測驗 (v2.9.48)
+  if (hash === '#/colortest' || hash.startsWith('#/colortest/')) {
+    renderColorTest();
+    const el = document.getElementById('colorTestPage');
     if (el) el.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'instant' });
     return;
@@ -6333,7 +6802,7 @@ document.getElementById('searchInput').addEventListener('input', e => {
     // ★ 修 bug：搜尋時如果不在列表頁就切回來
     if (location.hash || document.getElementById('pageList').classList.contains('hidden')) {
       document.getElementById('pageList').classList.remove('hidden');
-      ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage'].forEach(id => {
+      ['detailPage', 'checkoutPage', 'successPage', 'myOrdersPage', 'bodyCheckPage', 'dressupPage', 'colorTestPage'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
       });
@@ -6722,6 +7191,252 @@ async function dressupAddAllToCart() {
     toast('沒有可加入的商品，請先選商品');
   }
 }
+// ============================================================
+// 🎨 色彩心理測驗 (v2.9.48)
+// ============================================================
+function goColorTest() {
+  if (location.hash.startsWith('#/colortest')) {
+    renderColorTest();
+    return;
+  }
+  location.hash = '#/colortest';
+}
+
+const COLOR_TEST_DATA = [
+  {
+    key: 'red', name: '紅色系', icon: '🍎',
+    meaning: '自我（強的動物性）、力量，生存本能力量',
+    correspond: '人體有關活動性的部分——海底輪、下肢、四肢（關節）',
+    subs: [
+      { key: 'red-main', name: '紅色', bg: 'linear-gradient(135deg, #F26B7A 0%, #D13448 100%)', text: '#fff', like: '爽朗直接，海派作風，情緒來得快去的快；企圖心強烈、目標明確、喜歡贏；衝動好鬥、有仇必報、具有冒險精神；有比較強的掌控慾、看重忠誠、喜歡物質與享樂。', dislike: '' },
+      { key: 'pink', name: '粉紅色', bg: 'linear-gradient(135deg, #FBE0E8 0%, #F5B5C7 100%)', text: '#8B2E3F', like: '柔弱善良、喜歡委曲求全不善拒絕、不容易肯定自己；喜歡照顧別人（按照自己的方式）；常常以弱勢姿態來取的別人的注意和關愛，容易在情感上受傷或被欺騙；喜歡被真正關注與關愛，也喜歡單純溫暖的親近關係。', dislike: '不喜歡懦弱沒個性的樣子，討厭依附和脆弱。' },
+      { key: 'darkred', name: '暗紅色', bg: 'linear-gradient(135deg, #8B2E3F 0%, #5A1F2A 100%)', text: '#fff', like: '隱藏的強勢作風和掌控慾；潛藏的企圖心和野心；不喜歡過於直接衝動，但卻也常出現某種衝動的情緒，喜歡較低調的展現權力和能力。', dislike: '對生存有不安全感，有生活上的無奈感，不喜歡壓力；討厭一成不變及隱藏性的強勢掌控。' }
+    ]
+  },
+  {
+    key: 'orange', name: '橙色系', icon: '🧡',
+    meaning: '人際關係、丹田（生活的力量）、歸屬感、生活慾望與感官，情緒與慾望的接收與壓抑',
+    correspond: '人體有關活動性的部分——臍輪（肚臍上下2～3寸），大小腸（腸子是人的第二個大腦，儲藏情緒）',
+    subs: [
+      { key: 'orange-main', name: '橙色', bg: 'linear-gradient(135deg, #F7A95B 0%, #ED8731 100%)', text: '#fff', like: '活潑、圓融、喜歡社交、團體、歸屬感，容易因依附別人而隱沒自己的意見，情緒起伏較多，較感覺行事，抗壓性低。偏好豐富感官享受和美食。', dislike: '不喜歡人際互動的疲累，討厭多話和情緒化的人。' },
+      { key: 'pink-orange', name: '粉橘色', bg: 'linear-gradient(135deg, #FDE2CB 0%, #F7C9A3 100%)', text: '#9B5518', like: '需要親近或親密的關係，渴望家庭般的緊密連結感。容易將自己依附在親密關係而喪失自我；親密關係容易引發情緒的起伏和不安全感。捍衛家庭或感情的立場強烈。喜歡有被照顧關愛的感覺，害怕被拋棄；也是有家庭傷害或親密感需求的人。', dislike: '有親近關係的難題，害怕被依附的沒有自己的空間。' },
+      { key: 'dark-orange', name: '暗橘色', bg: 'linear-gradient(135deg, #C06A1A 0%, #8B4A10 100%)', text: '#fff', like: '身體壓抑，需要肢體/肌肉上的爆發性、身體力量的釋放，例如：運動。', dislike: '不喜歡肢體上的暴力、霸凌。' }
+    ]
+  },
+  {
+    key: 'yellow', name: '黃色系', icon: '💛',
+    meaning: '自我價值，面對外在世界的能力',
+    correspond: '人體有關活動性的部分——太陽神經叢、神經系統、自律神經、免疫系統、胃、腎（精力）',
+    subs: [
+      { key: 'yellow-main', name: '黃色', bg: 'linear-gradient(135deg, #F5D962 0%, #E4B824 100%)', text: '#5a4800', like: '樂觀積極幽默，具有激勵別人的能力，喜歡談論比較知識性的問題；愛面子重自尊，有時會顯得好大喜功，喜歡吸引別人注意來肯定自己，容易有潛藏的緊張感或強裝自信的問題。', dislike: '不喜歡誇張、愛表現或用權威姿態指揮控制的人，厭惡被人比較，有缺乏自信問題；喜歡說服／壓制別人。' },
+      { key: 'light-yellow', name: '淺黃色', bg: 'linear-gradient(135deg, #FBF2BF 0%, #F0E187 100%)', text: '#7a6500', like: '給人感覺輕鬆，希望被別人重視，常會表現出開朗溫和的態度，喜歡以活潑自信的態度引人注意，有好奇心和進取精神、童稚之心，但也有潛藏缺乏自信害怕不被尊重與自我價值定位的問題；但不像黃色那麼彰顯自己。', dislike: '不像黃色那麼想要證明自己。' },
+      { key: 'gold', name: '金色', bg: 'linear-gradient(135deg, #F5D278 0%, #C9A032 100%)', text: '#fff', like: '積極追求自我價值及期望被肯定，但常以頭銜或價值（價格）來評估別人或吸引別人的重視。容易有誇大炫耀和虛榮的敗金傾向。和自我定位的困難和內在空虛感，較重表面、情緒容易浮動，需要學習自我接納和自我肯定的能力。', dislike: '不喜歡愛誇耀和愛慕虛榮的人，容易有找不到自己真正價值與定位的問題。' },
+      { key: 'dirt-yellow', name: '土黃色', bg: 'linear-gradient(135deg, #C9B06A 0%, #A89245 100%)', text: '#fff', like: '務實、本分、但需要被認可（卻不像黃色那麼急於吸引注意、想要證明自己）。', dislike: '有自我認可的問題（可能曾被貶抑、瞧不起或自尊心被踐踏）。' }
+    ]
+  },
+  {
+    key: 'green', name: '綠色系', icon: '💚',
+    meaning: '安全、平衡、安心、放心、信心；心的問題、信任問題，對生命的開放與信任',
+    correspond: '心輪（不安痛苦傷害易留在心輪）、心臟、胸腔、乳房、胃、肺',
+    subs: [
+      { key: 'green-main', name: '綠色', bg: 'linear-gradient(135deg, #92CF96 0%, #5FAD6D 100%)', text: '#fff', like: '重視安全感和穩定感，追求公平、和諧、成長；思考盤根錯節（可處理複雜問題）；有組織企劃能力；有隱藏性，不主動展露；有缺乏勇氣和方向感的問題，容易有恐懼感，厭惡背叛和欺騙，卻也容易隱藏自己。', dislike: '有潛藏的恐懼感和無法信任的困擾，有缺乏勇氣的問題。' },
+      { key: 'light-green', name: '粉綠色', bg: 'linear-gradient(135deg, #D5EDD5 0%, #B5E3B8 100%)', text: '#2E5A3A', like: '希望改變、重新出發；充滿能量、充滿希望、朝氣蓬勃，對與成長相關的心事物有好奇心，但因處於初始期顯得浮動不穩定，後續的方向定位和持續力，是比較需要注意的方面。', dislike: '不喜歡新事物、害怕改變；尤其討厭突兀和誇張不自然的事物。' },
+      { key: 'dark-green', name: '深綠色', bg: 'linear-gradient(135deg, #4A7A52 0%, #2E5A3A 100%)', text: '#fff', like: '穩重踏實、重視安全感，凡事喜歡事先規劃，不會輕易冒險，不容易信任別人；有潛藏的恐懼，會隱藏自己真實感受，害怕被別人看透，容易思考跟金錢問題有關的考量。', dislike: '不喜歡現實、愛計較的人，害怕背叛和欺騙，有生活上的壓力及金錢困擾。' }
+    ]
+  },
+  {
+    key: 'blue', name: '藍色系', icon: '💙',
+    meaning: '溝通與獨立性，如何呈現和表達自我',
+    correspond: '喉輪（下顎到肩胛骨）',
+    subs: [
+      { key: 'blue-main', name: '藍色', bg: 'linear-gradient(135deg, #88B5DD 0%, #5B8ECD 100%)', text: '#fff', like: '具有知性、理性的特質；做事有條理，且有很好的理解和溝通能力；比較冷靜，容易以旁觀的角度評判事情；心地善良，但有壓力情緒的傾向，對於內在情感的表達比較有困難，喜歡自由，有自我思考空間，擅長解決問題，做事情走精緻路線，有創新力。', dislike: '不喜歡過於理性及冷漠的人，討厭讓人難以親近和了解的感覺。' },
+      { key: 'light-blue', name: '淺藍色', bg: 'linear-gradient(135deg, #D7E8F5 0%, #B3D4EB 100%)', text: '#2A4A75', like: '喜歡自由不受拘束，有改良式的創造力，有反對權威和制式化的傾向，開朗直率像小男孩，有叛逆性格，容易為了反對而反對，心裡有壓力就會想要放鬆自在一下。', dislike: '不喜歡像乖寶寶沒個性的樣子，討厭被規範或權威所束縛。' },
+      { key: 'dark-blue', name: '深藍色', bg: 'linear-gradient(135deg, #3A5C85 0%, #1E3659 100%)', text: '#fff', like: '做事有條理，分析能力強，邏輯、專注、意志力和責任感強，適合做深入研究，冷靜客觀善分析，有自省能力，但內心多壓抑，個性固執僵化、不易妥協，也難於表達內心的情感，容易有一種不被了解的孤獨；喜歡理性有條理的溝通模式。', dislike: '不喜歡固執僵化、自以為是、難以溝通的人，討厭被知識教條化所限制。' }
+    ]
+  },
+  {
+    key: 'purple', name: '紫色系', icon: '💜',
+    meaning: '靈性與非物質的精神世界',
+    correspond: '頂輪（頭頂的部位）',
+    subs: [
+      { key: 'purple-main', name: '紫色', bg: 'linear-gradient(135deg, #BE97D7 0%, #9369B8 100%)', text: '#fff', like: '有天馬行空的創造力、敏感、富於幻想、喜歡思考問題本質；有同理心，容易融入環境情境，但常分不清界線，困難表達自己的真實感受，讓人覺得情緒化，會有想多做少的傾向，執行力不足，具有憂鬱的氣質。', dislike: '不喜歡過於敏感、不切實際、逃避現實的人，容易陷入深思、太花腦筋的問題。' },
+      { key: 'light-purple', name: '淺紫色', bg: 'linear-gradient(135deg, #E5D4EF 0%, #D4B8E5 100%)', text: '#5A2E7A', like: '賦予幻想和想像力，個性溫和，內心單純而善良，敏感脆弱；不容易肯定自己，容易隨環境周遭的人事物影響，會憑感覺行事而不切實際，不現實、不落地、穩定度較弱，略帶憂鬱氣息。', dislike: '無法忍受不切實際、過於浪漫的想法，討厭沒有中心、隨感覺起伏的生活形態。' },
+      { key: 'dark-purple', name: '深紫色', bg: 'linear-gradient(135deg, #6B4590 0%, #42256B 100%)', text: '#fff', like: '多愁善感、心思細膩、想像力豐富，容易沉溺在自己的思想世界，喜歡探討人生問題和神秘性質高的領域；帶有潛藏的悲觀思想；超脫現實，易鑽牛角尖，常有無助和沮喪感，具有藝術氣息和設計能力，但實踐能力較弱，且較不易專注，容易讓人看不出真實的能力。', dislike: '不喜歡過於敏感、情緒化及負面思想的人，容易陷入鑽牛角尖、悲觀無助的困境。' }
+    ]
+  },
+  {
+    key: 'bw', name: '黑白色系', icon: '🐾',
+    meaning: '加強／削弱；隱藏／公開',
+    correspond: '',
+    subs: [
+      { key: 'black', name: '黑色', bg: 'linear-gradient(135deg, #3a3a3a 0%, #0f0f0f 100%)', text: '#fff', like: '善於隱藏、害怕出錯，自我定位有困難，容易用逃避解決問題；另一種是對自己有自信，有個性，獨立性很強，不好張揚，喜歡保有自己的隱私，行事低調。', dislike: '不喜歡不確定感，害怕陰暗和沮喪，有潛藏無法釐清和處理的問題（所產生的逃避傾向）。' },
+      { key: 'white', name: '白色', bg: 'linear-gradient(135deg, #ffffff 0%, #ececec 100%)', text: '#3a3a3a', like: '挑剔、要求完美、對自我和事物要求高，有一種超然的距離感，容易讓人覺得有壓力，內在有潛藏的茫然和不確定感有待釐清。', dislike: '不喜歡要求過高和太絕對而沒有轉圜的批判，討厭把事情全攤開、沒有隱私感。' },
+      { key: 'gray', name: '灰色', bg: 'linear-gradient(135deg, #a8a8a8 0%, #6a6a6a 100%)', text: '#fff', like: '不喜歡變動，為人行事低調穩重，樂於以配角之態來輔助或陪襯，不想有成為主角般的壓力，但也可能會有一種不想改變或無力改變的無奈感，可以忽略自己的存在，容易讓人感到沉悶及印象模糊。', dislike: '不喜歡讓人覺得可有可無、不受重視的感覺，有自我定位困難、低估自己的意味。' },
+      { key: 'silver', name: '銀色', bg: 'linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 50%, #e8e8e8 100%)', text: '#444', like: '喜歡新穎、前衛的事物，喜歡吸收新知、偏愛收集最新資訊。不善於面對內在情感，不易與人深談，人際關係中常給人冷酷的印象。', dislike: '不喜歡冷酷做作、不通人情的人，有潛藏情感交流的需求。' }
+    ]
+  }
+];
+
+function findColorSub(key) {
+  for (const fam of COLOR_TEST_DATA) {
+    const s = fam.subs.find(sub => sub.key === key);
+    if (s) return { sub: s, family: fam };
+  }
+  return null;
+}
+
+function renderColorTest() {
+  const el = document.getElementById('colorTestPage');
+  if (!el) return;
+  const hash = location.hash || '';
+  // #/colortest             → 步驟 1：選喜歡的子色
+  // #/colortest/<like>      → 步驟 2：選不喜歡的子色（排除 like）
+  // #/colortest/<like>/<dis>→ 結果頁
+  const parts = hash.replace(/^#\//, '').split('/');
+  const likeKey = parts[1] || '';
+  const disKey  = parts[2] || '';
+  const likeInfo = likeKey ? findColorSub(likeKey) : null;
+  const disInfo  = disKey  ? findColorSub(disKey)  : null;
+
+  // 色塊 HTML
+  const buildTiles = (stage, excludeKey) => COLOR_TEST_DATA.map(fam => `
+    <div class="ct-family">
+      <div class="ct-family-label"><span class="ct-family-icon">${fam.icon}</span>${fam.name}</div>
+      <div class="ct-sub-grid">
+        ${fam.subs
+          .filter(s => s.key !== excludeKey)
+          .map(s => `
+            <button class="ct-sub-tile" style="background:${s.bg};color:${s.text};" onclick="pickColorTest('${stage}','${s.key}')" aria-label="選擇${s.name}">
+              <span class="ct-sub-tile-name">${s.name}</span>
+            </button>
+          `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // === 步驟 1：選喜歡色 ===
+  if (!likeInfo) {
+    el.innerHTML = `
+      <button class="detail-back" onclick="location.hash=''">← 返回商店</button>
+      <div class="ct-hero">
+        <div class="ct-hero-emoji">🎨</div>
+        <h1 class="ct-hero-title">色彩心理測驗</h1>
+        <p class="ct-hero-sub">憑直覺挑你的顏色<br>看看它藏著什麼關於你的祕密 ✨</p>
+      </div>
+      <div class="ct-step-indicator">
+        <span class="ct-step ct-step-current">1</span>
+        <span class="ct-step-line"></span>
+        <span class="ct-step">2</span>
+      </div>
+      <div class="ct-step-title">💗 你最<b>喜歡</b>哪一個顏色？</div>
+      <div class="ct-families">${buildTiles('like', null)}</div>
+      <div class="ct-footer-note">※ 僅供趣味參考，色彩心理分析非醫療診斷</div>
+    `;
+    return;
+  }
+
+  // === 步驟 2：選不喜歡色（排除剛選的喜歡色） ===
+  if (!disInfo) {
+    el.innerHTML = `
+      <button class="detail-back" onclick="location.hash='#/colortest'">← 重選喜歡色</button>
+      <div class="ct-hero" style="padding-bottom:14px;">
+        <div class="ct-hero-emoji">🎨</div>
+        <h1 class="ct-hero-title">色彩心理測驗</h1>
+      </div>
+      <div class="ct-picked-row">
+        <span class="ct-picked-label">💗 喜歡</span>
+        <span class="ct-picked-chip" style="background:${likeInfo.sub.bg};color:${likeInfo.sub.text};">
+          ${likeInfo.sub.name}
+        </span>
+      </div>
+      <div class="ct-step-indicator">
+        <span class="ct-step ct-step-done">✓</span>
+        <span class="ct-step-line ct-step-line-done"></span>
+        <span class="ct-step ct-step-current">2</span>
+      </div>
+      <div class="ct-step-title">💔 你最<b>不喜歡</b>哪一個顏色？</div>
+      <div class="ct-families">${buildTiles('dis', likeKey)}</div>
+      <div class="ct-footer-note">※ 僅供趣味參考，色彩心理分析非醫療診斷</div>
+    `;
+    return;
+  }
+
+  // === 結果頁 ===
+  const likeSub = likeInfo.sub, likeFam = likeInfo.family;
+  const disSub  = disInfo.sub,  disFam  = disInfo.family;
+  const likeText = likeSub.like || '（此色主色無獨立「喜歡」描述）';
+  const disText  = disSub.dislike || '（此色主色無獨立「不喜歡」描述，可參考同色系其他子色）';
+
+  el.innerHTML = `
+    <button class="detail-back" onclick="location.hash='#/colortest'">← 重測</button>
+    <div class="ct-result-combo">
+      <div class="ct-result-side" style="background:${likeSub.bg};color:${likeSub.text};">
+        <div class="ct-result-side-tag">💗 喜歡</div>
+        <div class="ct-result-side-fam">${likeFam.icon} ${likeFam.name}</div>
+        <div class="ct-result-side-name">${likeSub.name}</div>
+      </div>
+      <div class="ct-result-side" style="background:${disSub.bg};color:${disSub.text};">
+        <div class="ct-result-side-tag">💔 不喜歡</div>
+        <div class="ct-result-side-fam">${disFam.icon} ${disFam.name}</div>
+        <div class="ct-result-side-name">${disSub.name}</div>
+      </div>
+    </div>
+
+    <!-- 喜歡色分析 -->
+    <div class="ct-section-title ct-section-like">💗 你喜歡「${likeSub.name}」</div>
+    <div class="ct-info-card">
+      <div class="ct-info-label">【${likeFam.name}內涵】</div>
+      <div class="ct-info-text">${likeFam.meaning}</div>
+    </div>
+    ${likeFam.correspond ? `
+    <div class="ct-info-card">
+      <div class="ct-info-label">【對應身體部位】</div>
+      <div class="ct-info-text">${likeFam.correspond}</div>
+    </div>` : ''}
+    <div class="ct-sub-mini">
+      <div class="ct-sub-mini-name">${likeSub.name} · 性格特質</div>
+      <div class="ct-sub-mini-text">${likeText}</div>
+    </div>
+
+    <!-- 分隔 -->
+    <div class="ct-divider"></div>
+
+    <!-- 不喜歡色分析 -->
+    <div class="ct-section-title ct-section-dis">💔 你不喜歡「${disSub.name}」</div>
+    <div class="ct-info-card">
+      <div class="ct-info-label">【${disFam.name}內涵】</div>
+      <div class="ct-info-text">${disFam.meaning}</div>
+    </div>
+    ${disFam.correspond ? `
+    <div class="ct-info-card">
+      <div class="ct-info-label">【對應身體部位】</div>
+      <div class="ct-info-text">${disFam.correspond}</div>
+    </div>` : ''}
+    <div class="ct-sub-mini">
+      <div class="ct-sub-mini-name">${disSub.name} · 抗拒的面向</div>
+      <div class="ct-sub-mini-text">${disText}</div>
+    </div>
+
+    <div class="ct-actions">
+      <button class="ct-btn ct-btn-outline" onclick="location.hash='#/colortest'">🔄 再測一次</button>
+      <button class="ct-btn ct-btn-primary" onclick="location.hash=''">🛍 回去逛逛</button>
+    </div>
+    <div class="ct-footer-note">※ 僅供趣味參考，色彩心理分析非醫療診斷</div>
+  `;
+}
+
+function pickColorTest(stage, key) {
+  const hash = location.hash || '';
+  if (stage === 'like') {
+    location.hash = '#/colortest/' + key;
+  } else {
+    const parts = hash.replace(/^#\//, '').split('/');
+    const likeKey = parts[1] || '';
+    if (!likeKey) { location.hash = '#/colortest'; return; }
+    location.hash = '#/colortest/' + likeKey + '/' + key;
+  }
+}
+
 function renderBodyCheck() {
   const el = document.getElementById('bodyCheckPage');
   if (!el) return;
