@@ -164,6 +164,26 @@ body {
 
 .cart-btn:hover, .cart-btn:active { background: var(--apricot-soft); transform: scale(1.05); }
 
+/* ★ v2.9.49 自製 icon 按鈕（icon 自帶圓邊，去掉按鈕原本的米白底 + 木色框） */
+.cart-btn-img {
+  background: transparent;
+  border: none;
+  padding: 0;
+  overflow: visible;
+}
+.cart-btn-img:hover, .cart-btn-img:active {
+  background: transparent;
+  transform: scale(1.1);
+}
+.cart-btn-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .cart-badge {
   position: absolute;
   top: -2px;
@@ -3306,23 +3326,23 @@ body.halloween-mode .product-card:active {
       <span class="search-icon">🔍</span>
       <input type="text" class="search-input" id="searchInput" placeholder="搜尋商品..." autocomplete="off">
     </div>
-    <button class="cart-btn" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
-      📏
+    <button class="cart-btn cart-btn-img" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
+      <img src="./icons/body-check.png" alt="" class="cart-btn-icon">
     </button>
     <!-- 🎨 色彩心理測驗 (v2.9.48) -->
-    <button class="cart-btn" onclick="goColorTest()" aria-label="色彩心理測驗" title="色彩心理測驗">
-      🎨
+    <button class="cart-btn cart-btn-img" onclick="goColorTest()" aria-label="色彩心理測驗" title="色彩心理測驗">
+      <img src="./icons/color-test.png" alt="" class="cart-btn-icon">
     </button>
     <!-- 👗 搭配小劇場按鈕（開發中隱藏，Wan 自己調整完畢再開放） -->
-    <button class="cart-btn" id="dressupBtn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場" style="display:none;">
-      👗
+    <button class="cart-btn cart-btn-img" id="dressupBtn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場" style="display:none;">
+      <img src="./icons/dressup.png" alt="" class="cart-btn-icon">
     </button>
-    <button class="cart-btn" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
-      📮
+    <button class="cart-btn cart-btn-img" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
+      <img src="./icons/orders.png" alt="" class="cart-btn-icon">
       <span class="cart-badge" id="myOrdersBadge" data-count="0"></span>
     </button>
-    <button class="cart-btn" onclick="openCart()" aria-label="購物車">
-      🛒
+    <button class="cart-btn cart-btn-img" onclick="openCart()" aria-label="購物車">
+      <img src="./icons/cart.png" alt="" class="cart-btn-icon">
       <span class="cart-badge" id="cartBadge" data-count="0"></span>
     </button>
   </div>
