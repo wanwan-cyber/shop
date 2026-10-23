@@ -675,18 +675,33 @@ main {
     transform: translateY(-2px) rotate(8deg);
     position: static !important;
   }
-  /* 蝙蝠在手機版用預設 60x60 即可 */
   .brand-addr { font-size: 9.5px; margin-top: 2px; }
   .search-input { font-size: 13px; padding: 8px 12px 8px 32px; }
   .search-icon { left: 10px; font-size: 12px; }
-  .cart-btn { width: 36px; height: 36px; font-size: 16px; }
+  /* ★ v2.9.49 手機版 header 壓縮：icon 小一點、間距縮緊，塞得下 5 顆按鈕 */
+  .site-header { padding: calc(10px + var(--safe-top)) 10px 10px; }
+  .header-inner { gap: 6px; }
+  .cart-btn { width: 32px; height: 32px; font-size: 15px; }
   .cat-bar-wrap { top: 61px; }
+  /* 蝙蝠改到 header 下方漂浮，不蓋到按鈕 */
+  #halloweenBats {
+    top: 68px !important;
+    right: 6px !important;
+    width: 44px !important;
+    height: 44px !important;
+    z-index: 50 !important;
+  }
+  #hwBat1 { width: 16px !important; height: 16px !important; }
+  #hwBat2 { width: 11px !important; height: 11px !important; top: 20px !important; right: 20px !important; }
 }
 
 @media (max-width: 380px) {
   .brand-name { font-size: 15px; }
   #brandHalloween { width: 18px !important; height: 18px !important; margin-left: 3px !important; }
   .brand-addr { font-size: 9px; }
+  .header-inner { gap: 4px; }
+  .cart-btn { width: 30px; height: 30px; }
+  .search-input { padding: 7px 10px 7px 28px; font-size: 12px; }
 }
 
 /* ============================================================
