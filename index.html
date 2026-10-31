@@ -519,6 +519,15 @@ main {
 }
 
 .footer-inner { max-width: 1280px; margin: 0 auto; }
+/* ★ 門市資訊 */
+.store-info { margin: 4px auto 26px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-soft); font-size: 13px; letter-spacing: 0.5px; }
+.store-info-addr { color: var(--text); }
+.store-info-label { margin-top: 10px; font-size: 11px; letter-spacing: 3px; color: var(--text-mute); }
+.store-hours { display: grid; grid-template-columns: auto auto; column-gap: 22px; row-gap: 4px; margin: 0; font-variant-numeric: tabular-nums; }
+.store-hours dt { text-align: right; margin: 0; }
+.store-hours dd { text-align: left; margin: 0; color: var(--text); }
+.store-hours dd.closed { color: var(--text-mute); }
+.store-info-map { margin-top: 10px; font-size: 12px; color: var(--text-soft); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
 
 .footer-brand {
   font-size: 16px;
@@ -3529,13 +3538,17 @@ body.halloween-mode .product-card:active {
   <div class="footer-inner">
     <div class="footer-brand">WanWan Selected</div>
     <div class="footer-tagline">精選女裝&nbsp;·&nbsp;新竹湖口</div>
-    <div style="font-size:12px;color:var(--text-soft);margin-bottom:20px;letter-spacing:0.5px;">
-      📍 新竹縣湖口鄉信勢村明德街210號
-    </div>
-    <div style="font-size:12px;color:var(--text-soft);margin:-12px 0 20px;letter-spacing:0.5px;line-height:1.8;">
-      🕐 週一、三、四 13:00–18:30 ｜ 週五 13:00–19:00<br>
-      週六、日 13:00–17:00 ｜ 週二公休<br>
-      <a href="https://maps.app.goo.gl/fXntqMA7MxCrsygPA" target="_blank" rel="noopener" style="color:inherit;">Google 地圖導航</a>
+    <!-- ★ 門市資訊：地址 + 營業時間（對齊排版） -->
+    <div class="store-info">
+      <div class="store-info-addr">新竹縣湖口鄉信勢村明德街210號</div>
+      <div class="store-info-label">營業時間</div>
+      <dl class="store-hours">
+        <dt>週一・三・四</dt><dd>13:00 – 18:30</dd>
+        <dt>週五</dt><dd>13:00 – 19:00</dd>
+        <dt>週六・日</dt><dd>13:00 – 17:00</dd>
+        <dt>週二</dt><dd class="closed">公休</dd>
+      </dl>
+      <a class="store-info-map" href="https://maps.app.goo.gl/fXntqMA7MxCrsygPA" target="_blank" rel="noopener">在 Google 地圖開啟 →</a>
     </div>
     <div class="footer-contact">
       <a href="https://lin.ee/8HCjq0w" class="contact-btn" target="_blank" rel="noopener">
