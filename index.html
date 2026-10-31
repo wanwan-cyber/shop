@@ -3393,9 +3393,7 @@ body.halloween-mode .product-card:active {
 </header>
 
 <!-- ===== DEMO BANNER (M2 期間顯示) ===== -->
-<div class="demo-banner" id="demoBanner" style="display:none">
-  <strong>⚠️ 展示模式</strong>：目前顯示範例商品，實際商品資料串接中
-</div>
+<div class="demo-banner" id="demoBanner" style="display:none"></div>
 
 <!-- ===== CATEGORY BAR ===== -->
 <div class="cat-bar-wrap">
@@ -3932,6 +3930,7 @@ async function loadProducts() {
     allProducts = MOCK_PRODUCTS;
     window._productsLoadedOnce = true; // ★ v2.9.38
     document.getElementById('demoBanner').style.display = 'block';
+    document.getElementById('demoBanner').innerHTML = '<strong>⚠️ 展示模式</strong>：目前顯示範例商品，實際商品資料串接中';
     render();
     return;
   }
