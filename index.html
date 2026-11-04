@@ -3445,7 +3445,7 @@ body.halloween-mode .product-card:active {
         <h2 class="d11-title">雙11 選物日<span>期間限定</span></h2>
         <div class="d11-perks">
           <div class="d11-perk">🚚 滿 <b>$1,111</b> 免運</div>
-          <div class="d11-perk">👗 指定穿搭 <b>組合價</b></div>
+          <div class="d11-perk">👗 任 2 件折 <b>$111</b></div>
         </div>
         <div class="d11-count" id="d11Count">活動倒數</div>
         <div class="d11-note">11/11（二）店休，當天訂單於 11/12 起依序出貨</div>
@@ -3942,6 +3942,22 @@ const PROMO_FREE_SHIP = {
 };
 const FREE_SHIP_PROMO_ON = Date.now() >= PROMO_FREE_SHIP.start && Date.now() < PROMO_FREE_SHIP.end;
 const FREE_SHIPPING_THRESHOLD = FREE_SHIP_PROMO_ON ? PROMO_FREE_SHIP.threshold : 2000; // 滿多少免運
+
+// ★ 雙11 任 2 件折 $111（同一段活動時間；每滿 2 件折一次，4 件折 $222；配件不算件數）
+const PROMO_PAIR = { label: '雙11 任2件折$111', every: 2, off: 111, excludeCats: ['配件'] };
+function getPairPromo(list) {
+  const res = { count: 0, sets: 0, discount: 0 };
+  if (!FREE_SHIP_PROMO_ON || !Array.isArray(list)) return res;
+  list.forEach(i => {
+    const p = (typeof allProducts !== 'undefined' ? allProducts : []).find(x => x.id === i.productId);
+    const cat = (p && p.cat) || i.cat || '';
+    if (PROMO_PAIR.excludeCats.indexOf(cat) >= 0) return;
+    res.count += (i.qty || 1);
+  });
+  res.sets = Math.floor(res.count / PROMO_PAIR.every);
+  res.discount = res.sets * PROMO_PAIR.off;
+  return res;
+}
 const SHIPPING_METHODS = [
   { id: 'store_pickup',       name: '到店自取', fee: 0,  desc: '新竹縣湖口鄉明德街210號｜營業時間內取貨' },
   { id: 'convenience_store',  name: '7-11 / 全家 / 萊爾富 店到店', fee: 60, desc: '寄達您指定的超商門市，需填店號 + 店名' },
@@ -5736,7 +5752,8 @@ function getCartTotal() {
   const sub = getCartSubtotal();
   const bundleHits = (typeof detectShopBundles === 'function') ? detectShopBundles(cart) : [];
   const bundleDisc = bundleHits.reduce((s, h) => s + h.savings, 0);
-  return Math.max(0, sub - bundleDisc);
+  const pairDisc = getPairPromo(cart).discount; // ★ 雙11 任2件折
+  return Math.max(0, sub - bundleDisc - pairDisc);
 }
 
 function getCartCount() {
@@ -5796,7 +5813,18 @@ function renderCart() {
          <div class="fsb-progress"><div class="fsb-fill" style="width:${percent}%"></div></div>
        </div>`;
 
-  body.innerHTML = bundleHtml + freeShipHtml + cart.map(item => `
+  // ★ 雙11 任2件折提示
+  const pp = getPairPromo(cart);
+  let pairHtml = '';
+  if (FREE_SHIP_PROMO_ON && pp.count > 0) {
+    const need = PROMO_PAIR.every - (pp.count % PROMO_PAIR.every);
+    pairHtml = `<div style="margin:0 0 10px;padding:10px 12px;background:linear-gradient(135deg,#F5EBDD,#F2D5B5);border:1px solid var(--border-strong);border-radius:10px;font-size:13px;color:#6E5536;">
+      ${pp.discount > 0 ? `🎉 <strong>${PROMO_PAIR.label}</strong>　已折 <strong>NT$${pp.discount.toLocaleString()}</strong>` : `🎁 <strong>${PROMO_PAIR.label}</strong>`}
+      ${need < PROMO_PAIR.every ? `<div style="font-size:12px;margin-top:3px;color:var(--text-soft);">再加 ${need} 件衣服，${pp.discount > 0 ? '再' : '現'}折 $${PROMO_PAIR.off}</div>` : ''}
+    </div>`;
+  }
+
+  body.innerHTML = bundleHtml + pairHtml + freeShipHtml + cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-img">
         ${item.image
@@ -6039,7 +6067,8 @@ function updateCheckoutTotals() {
     ? `<span class="free-tag">已享免運 🎉</span>`
     : (fee === 0 ? `免費` : `NT$${fee.toLocaleString()}`);
   document.getElementById('summaryTotals').innerHTML = `
-    <div class="summary-total-row"><span>商品小計</span><span>NT$${subtotal.toLocaleString()}</span></div>
+    ${getPairPromo(cart).discount > 0 ? `<div class="summary-total-row"><span>🎉 ${PROMO_PAIR.label}</span><span>−NT$${getPairPromo(cart).discount.toLocaleString()}</span></div>` : ''}
+    <div class="summary-total-row"><span>商品小計${getPairPromo(cart).discount > 0 ? '（已折扣）' : ''}</span><span>NT$${subtotal.toLocaleString()}</span></div>
     <div class="summary-total-row"><span>運費</span><span>${feeHtml}</span></div>
     <div class="summary-total-row grand"><span>總計</span><span class="amount">NT$${total.toLocaleString()}</span></div>
   `;
@@ -6101,7 +6130,9 @@ async function submitOrder() {
       price: i.price, qty: i.qty, image: i.image, subtotal: i.price * i.qty,
     })),
     itemCount: getCartCount(),
-    subtotal, total, note,
+    subtotal, total,
+    // ★ 雙11：把折扣寫進備註，POS 看訂單時知道為什麼金額比較少
+    note: (() => { const pd = getPairPromo(cart).discount; const tag = pd > 0 ? `【${PROMO_PAIR.label} −$${pd}】` : ''; return [tag, note].filter(Boolean).join(' '); })(),
   };
 
   showLoading('送出訂單中...');
