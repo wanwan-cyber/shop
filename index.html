@@ -3337,6 +3337,29 @@ body.halloween-mode .product-card:active {
 .bc-popup-close { position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 22px; color: var(--text-mute, #A9998A); cursor: pointer; padding: 4px 10px; line-height: 1; }
 .bc-popup-close:hover { color: var(--wood, #8B6F47); }
 
+/* ============================================================
+   ★ 雙11 選物日活動區塊（11/4 ～ 11/11 自動顯示，時間到自動隱藏）
+   ============================================================ */
+.d11 { position: relative; overflow: hidden; margin: 4px 0 18px; border-radius: 18px;
+  background: linear-gradient(135deg, #F5EBDD 0%, #F2D5B5 100%); border: 1px solid var(--border-strong);
+  padding: 22px 20px 18px; color: var(--text); }
+.d11::after { content: "11.11"; position: absolute; right: -10px; bottom: -34px; font-family: Georgia, "Times New Roman", serif;
+  font-size: 120px; font-weight: 700; letter-spacing: -4px; color: rgba(139,111,71,.10); pointer-events: none; line-height: 1; }
+.d11-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
+.d11-eyebrow { font-size: 11px; letter-spacing: 3px; color: var(--wood); font-weight: 600; }
+.d11-title { font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 700; color: #6E5536; line-height: 1.2; margin: 0; }
+.d11-title span { font-family: inherit; font-size: 15px; font-weight: 600; letter-spacing: 2px; margin-left: 6px; color: var(--wood); }
+.d11-perks { display: flex; flex-wrap: wrap; gap: 8px; }
+.d11-perk { background: var(--cream-3); border: 1px solid var(--border-strong); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--text); }
+.d11-perk b { color: #6E5536; font-variant-numeric: tabular-nums; }
+.d11-count { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-soft); flex-wrap: wrap; }
+.d11-count .n { font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 700; color: #6E5536; font-variant-numeric: tabular-nums; min-width: 1.4em; text-align: center; }
+.d11-note { font-size: 11px; color: var(--text-mute); }
+@media (min-width: 768px) {
+  .d11 { padding: 28px 32px 22px; }
+  .d11-title { font-size: 34px; }
+  .d11::after { font-size: 180px; bottom: -50px; }
+}
 </style>
 <!-- 店家資料：給 Google / AI 讀的結構化標記 -->
 <script type="application/ld+json">
@@ -3416,6 +3439,19 @@ body.halloween-mode .product-card:active {
 <!-- ===== MAIN ===== -->
 <main>
   <div class="page-list" id="pageList">
+    <!-- ★ 雙11 選物日（JS 依日期自動顯示） -->
+    <section class="d11" id="d11Promo" hidden>
+      <div class="d11-inner">
+        <div class="d11-eyebrow">11.04 — 11.11</div>
+        <h2 class="d11-title">雙11 選物日<span>期間限定</span></h2>
+        <div class="d11-perks">
+          <div class="d11-perk">🚚 滿 <b>$1,111</b> 免運</div>
+          <div class="d11-perk">👗 指定穿搭 <b>組合價</b></div>
+        </div>
+        <div class="d11-count" id="d11Count">活動倒數</div>
+        <div class="d11-note">11/11（二）店休，當天訂單於 11/12 起依序出貨</div>
+      </div>
+    </section>
     <div class="hero-banner" id="heroBanner" style="display:none;"></div>
     <!-- 🎁 組合優惠區塊 (v2.9.22) -->
     <div id="bundlesPromo" style="display:none;"></div>
@@ -3909,7 +3945,15 @@ function getColorHex(name, product) {
 // ============================================================
 // ★ M4 結帳流程常數
 // ============================================================
-const FREE_SHIPPING_THRESHOLD = 2000; // 滿多少免運
+// ★ 雙11 活動：11/4 ～ 11/11 23:59（台灣時間）滿 $1,111 免運，時間到自動恢復 $2,000
+const PROMO_FREE_SHIP = {
+  label: '雙11限定',
+  threshold: 1111,
+  start: Date.UTC(2026, 10, 3, 16, 0, 0),   // 2026/11/4 00:00 台灣時間
+  end:   Date.UTC(2026, 10, 11, 16, 0, 0),  // 2026/11/12 00:00 台灣時間（11/11 整天都算）
+};
+const FREE_SHIP_PROMO_ON = Date.now() >= PROMO_FREE_SHIP.start && Date.now() < PROMO_FREE_SHIP.end;
+const FREE_SHIPPING_THRESHOLD = FREE_SHIP_PROMO_ON ? PROMO_FREE_SHIP.threshold : 2000; // 滿多少免運
 const SHIPPING_METHODS = [
   { id: 'store_pickup',       name: '到店自取', fee: 0,  desc: '新竹縣湖口鄉明德街210號｜營業時間內取貨' },
   { id: 'convenience_store',  name: '7-11 / 全家 / 萊爾富 店到店', fee: 60, desc: '寄達您指定的超商門市，需填店號 + 店名' },
@@ -5764,7 +5808,7 @@ function renderCart() {
          <div class="fsb-progress"><div class="fsb-fill" style="width:100%"></div></div>
        </div>`
     : `<div class="free-shipping-bar">
-         再買 <strong>NT$${gap.toLocaleString()}</strong> 即可免運（滿 $${FREE_SHIPPING_THRESHOLD.toLocaleString()}）
+         再買 <strong>NT$${gap.toLocaleString()}</strong> 即可免運（${FREE_SHIP_PROMO_ON ? PROMO_FREE_SHIP.label + ' ' : ''}滿 $${FREE_SHIPPING_THRESHOLD.toLocaleString()}）
          <div class="fsb-progress"><div class="fsb-fill" style="width:${percent}%"></div></div>
        </div>`;
 
@@ -6939,6 +6983,23 @@ updateMyOrdersBadge();
       })
       .catch(() => {});
   }
+})();
+// ★ 雙11 選物日：活動區塊顯示＋倒數（跟免運活動同一組時間）
+(function initDouble11() {
+  const el = document.getElementById('d11Promo');
+  if (!el || typeof PROMO_FREE_SHIP === 'undefined' || !FREE_SHIP_PROMO_ON) return;
+  el.hidden = false;
+  const box = document.getElementById('d11Count');
+  const pad = n => String(n).padStart(2, '0');
+  function tick() {
+    const left = PROMO_FREE_SHIP.end - Date.now();
+    if (left <= 0) { el.hidden = true; return; }
+    const d = Math.floor(left / 86400000), h = Math.floor(left % 86400000 / 3600000),
+          m = Math.floor(left % 3600000 / 60000), s = Math.floor(left % 60000 / 1000);
+    box.innerHTML = '活動倒數 <span class="n">' + d + '</span>天 <span class="n">' + pad(h) + '</span>時 <span class="n">' + pad(m) + '</span>分 <span class="n">' + pad(s) + '</span>秒';
+    setTimeout(tick, 1000);
+  }
+  tick();
 })();
 // 🎃 萬聖節裝飾（10/20 - 11/02 自動開啟）
 (function initHalloween() {
