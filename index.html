@@ -3398,7 +3398,6 @@ body.halloween-mode .product-card:active {
   <div class="header-inner">
     <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;flex-direction:row;align-items:center;gap:8px;" title="回到首頁">
       <span class="brand-name">WanWan Selected</span>
-      <img id="brandHalloween" src="halloween.png" alt="" style="display:none;width:50px;height:50px;object-fit:contain;flex-shrink:0;">
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -3539,18 +3538,7 @@ body.halloween-mode .product-card:active {
 <!-- Loading overlay（送單時） -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner" id="loadingSpinner"></div>
-  <img id="loadingHalloweenImg" src="halloween.png" alt="" style="display:none;width:200px;height:200px;object-fit:contain;animation:halloween-bob 2.4s ease-in-out infinite;">
   <div id="loadingText">送出訂單中...</div>
-</div>
-
-<!-- 🎃 萬聖節右上角飄浮小蝙蝠（10/20 - 11/02） -->
-<div id="halloweenBats" style="display:none;position:fixed;top:4px;right:4px;width:60px;height:60px;pointer-events:none;z-index:100;overflow:visible;">
-  <svg id="hwBat1" viewBox="0 0 32 32" width="20" height="20" style="position:absolute;top:4px;right:4px;color:#3d2a1a;animation:bat-fly-a 7s ease-in-out infinite;opacity:.68;" fill="currentColor">
-    <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
-  </svg>
-  <svg id="hwBat2" viewBox="0 0 32 32" width="14" height="14" style="position:absolute;top:28px;right:28px;color:#3d2a1a;animation:bat-fly-b 9s ease-in-out infinite;opacity:.55;animation-delay:-2s;" fill="currentColor">
-    <path d="M16 10 C14 8, 11 7, 8 8 C5 9, 3 11, 2 14 C4 13, 6 13, 8 14 C7 15, 7 17, 8 18 C9 16, 11 16, 13 17 L13 20 L15 18 L16 20 L17 18 L19 20 L19 17 C21 16, 23 16, 24 18 C25 17, 25 15, 24 14 C26 13, 28 13, 30 14 C29 11, 27 9, 24 8 C21 7, 18 8, 16 10 Z"/>
-  </svg>
 </div>
 
 <!-- ===== 購物車 BOTTOM SHEET ===== -->
@@ -4756,16 +4744,12 @@ function renderProducts() {
   // ★ v2.9.38 商品還沒載入完 → 顯示 loading 畫面而非「找不到商品」
   if (!window._productsLoadedOnce && allProducts.length === 0) {
     count.innerHTML = '';
-    const now = new Date(); const _m = now.getMonth() + 1, _d = now.getDate();
-    const isHl = (_m === 10 && _d >= 20) || (_m === 11 && _d <= 2);
-    const indicator = isHl
-      ? `<img src="halloween.png" alt="" style="width:160px;height:160px;object-fit:contain;animation:halloween-bob 2.4s ease-in-out infinite;">`
-      : `<div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--apricot-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;"></div>`;
+    const indicator = `<div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--apricot-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;"></div>`;
     area.innerHTML = `
       <div class="empty-state" style="padding:50px 20px;text-align:center;">
         ${indicator}
         <h3 style="color:var(--text-mute);margin-top:16px;font-weight:600;">商品載入中...</h3>
-        <p style="color:var(--text-mute);font-size:12px;">${isHl ? '🎃 女巫正在幫你準備中' : '請稍等'}</p>
+        <p style="color:var(--text-mute);font-size:12px;">請稍等</p>
       </div>`;
     return;
   }
@@ -7000,26 +6984,6 @@ updateMyOrdersBadge();
     setTimeout(tick, 1000);
   }
   tick();
-})();
-// 🎃 萬聖節裝飾（10/20 - 11/02 自動開啟）
-(function initHalloween() {
-  const now = new Date();
-  const m = now.getMonth() + 1, d = now.getDate();
-  const isHalloweenSeason = (m === 10 && d >= 20) || (m === 11 && d <= 2);
-  if (!isHalloweenSeason) return;
-  // ★ v2.9.42 掛 body class 讓 CSS 可以用 .halloween-mode 觸發效果（例如商品卡片 hover 橘色光暈）
-  document.body.classList.add('halloween-mode');
-  const pumpkin = document.getElementById('brandHalloween');
-  const bats = document.getElementById('halloweenBats');
-  const loadingSpinner = document.getElementById('loadingSpinner');
-  const loadingImg = document.getElementById('loadingHalloweenImg');
-  if (pumpkin) pumpkin.style.display = 'inline-block';
-  if (bats) bats.style.display = 'block';
-  // 載入畫面：萬聖節期間改用彩蛋圖取代轉圈圈
-  if (loadingSpinner && loadingImg) {
-    loadingSpinner.style.display = 'none';
-    loadingImg.style.display = 'block';
-  }
 })();
 loadProducts().then(() => {
   // 商品載入完成後檢查 URL hash（用戶如果直接進入 #/product/xxx）
