@@ -3338,27 +3338,23 @@ body.halloween-mode .product-card:active {
 .bc-popup-close:hover { color: var(--wood, #8B6F47); }
 
 /* ============================================================
-   ★ 雙11 選物日活動區塊（11/4 ～ 11/11 自動顯示，時間到自動隱藏）
+   ★ 雙11 選物日活動區塊（C 深咖高級感；11/4 ～ 11/11 自動顯示）
    ============================================================ */
-.d11 { position: relative; overflow: hidden; margin: 4px 0 18px; border-radius: 18px;
-  background: linear-gradient(135deg, #F5EBDD 0%, #F2D5B5 100%); border: 1px solid var(--border-strong);
-  padding: 22px 20px 18px; color: var(--text); }
-.d11::after { content: "11.11"; position: absolute; right: -10px; bottom: -34px; font-family: Georgia, "Times New Roman", serif;
-  font-size: 120px; font-weight: 700; letter-spacing: -4px; color: rgba(139,111,71,.10); pointer-events: none; line-height: 1; }
+.d11 { position: relative; overflow: hidden; margin: 4px 0 18px; border-radius: 18px; background: #4A3A2A; color: #F5EBDD; padding: 22px 20px 18px; }
+.d11::after { content: "11.11"; position: absolute; right: -8px; bottom: -30px; font-family: Georgia, "Times New Roman", serif; font-size: 110px; font-weight: 700; letter-spacing: -4px; color: rgba(245,235,221,.06); pointer-events: none; line-height: 1; }
 .d11-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px; }
-.d11-eyebrow { font-size: 11px; letter-spacing: 3px; color: var(--wood); font-weight: 600; }
-.d11-title { font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 700; color: #6E5536; line-height: 1.2; margin: 0; }
-.d11-title span { font-family: inherit; font-size: 15px; font-weight: 600; letter-spacing: 2px; margin-left: 6px; color: var(--wood); }
-.d11-perks { display: flex; flex-wrap: wrap; gap: 8px; }
-.d11-perk { background: var(--cream-3); border: 1px solid var(--border-strong); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--text); }
-.d11-perk b { color: #6E5536; font-variant-numeric: tabular-nums; }
-.d11-count { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--text-soft); flex-wrap: wrap; }
-.d11-count .n { font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 700; color: #6E5536; font-variant-numeric: tabular-nums; min-width: 1.4em; text-align: center; }
-.d11-note { font-size: 11px; color: var(--text-mute); }
+.d11-eyebrow { font-size: 11px; letter-spacing: 4px; color: #D9B98F; }
+.d11-title { font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 700; color: #FAF3EB; line-height: 1.2; margin: 0; }
+.d11-title em { font-style: normal; color: #E8B587; }
+.d11-perks { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: #F5EBDD; border-top: 1px solid rgba(245,235,221,.2); padding-top: 12px; }
+.d11-perk b { color: #E8B587; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-variant-numeric: tabular-nums; margin: 0 2px; }
+.d11-count { display: flex; align-items: baseline; gap: 5px; font-size: 12px; color: #D9B98F; flex-wrap: wrap; }
+.d11-count .n { font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 700; color: #FAF3EB; font-variant-numeric: tabular-nums; min-width: 1.3em; text-align: center; }
+.d11-note { font-size: 11px; color: rgba(245,235,221,.6); }
 @media (min-width: 768px) {
   .d11 { padding: 28px 32px 22px; }
-  .d11-title { font-size: 34px; }
-  .d11::after { font-size: 180px; bottom: -50px; }
+  .d11-title { font-size: 36px; }
+  .d11::after { font-size: 170px; bottom: -46px; }
 }
 </style>
 <!-- 店家資料：給 Google / AI 讀的結構化標記 -->
@@ -3442,13 +3438,13 @@ body.halloween-mode .product-card:active {
     <section class="d11" id="d11Promo" hidden>
       <div class="d11-inner">
         <div class="d11-eyebrow">11.04 — 11.11</div>
-        <h2 class="d11-title">雙11 選物日<span>期間限定</span></h2>
+        <h2 class="d11-title">雙<em>11</em> 選物日</h2>
         <div class="d11-perks">
-          <div class="d11-perk">🚚 滿 <b>$1,111</b> 免運</div>
-          <div class="d11-perk">👗 任 2 件折 <b>$111</b></div>
+          <div class="d11-perk">服飾任選 2 件折<b>$111</b></div>
+          <div class="d11-perk">滿<b>$1,111</b>免運</div>
         </div>
         <div class="d11-count" id="d11Count">活動倒數</div>
-        <div class="d11-note">11/11（二）店休，當天訂單於 11/12 起依序出貨</div>
+        <div class="d11-note">配件不列入件數｜11/11（二）店休，當天訂單於 11/12 起依序出貨</div>
       </div>
     </section>
     <div class="hero-banner" id="heroBanner" style="display:none;"></div>
@@ -3944,7 +3940,7 @@ const FREE_SHIP_PROMO_ON = Date.now() >= PROMO_FREE_SHIP.start && Date.now() < P
 const FREE_SHIPPING_THRESHOLD = FREE_SHIP_PROMO_ON ? PROMO_FREE_SHIP.threshold : 2000; // 滿多少免運
 
 // ★ 雙11 任 2 件折 $111（同一段活動時間；每滿 2 件折一次，4 件折 $222；配件不算件數）
-const PROMO_PAIR = { label: '雙11 任2件折$111', every: 2, off: 111, excludeCats: ['配件'] };
+const PROMO_PAIR = { label: '雙11 服飾任選2件折$111', every: 2, off: 111, excludeCats: ['配件'] };
 function getPairPromo(list) {
   const res = { count: 0, sets: 0, discount: 0 };
   if (!FREE_SHIP_PROMO_ON || !Array.isArray(list)) return res;
