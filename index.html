@@ -69,7 +69,7 @@ body {
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--border);
-  padding: calc(12px + var(--safe-top)) 16px 24px; /* ★ 下方多留空間給圖示文字 */
+  padding: calc(12px + var(--safe-top)) 16px 12px;
 }
 
 .header-inner {
@@ -104,11 +104,15 @@ body {
   padding-top: 1px;
   color: var(--text-mute);
   letter-spacing: 0.3px;
-  margin-top: 2px;
+  margin-top: 6.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ★ 店名對齊圖示、地址對齊圖示下的文字、搜尋框對齊圖示 */
+.brand { position: relative; top: 5px; }
+.search-box { top: -7px; }
 
 .search-box {
   flex: 1;
@@ -172,6 +176,7 @@ body {
   border: none;
   padding: 0;
   overflow: visible;
+  margin-bottom: 14px; /* ★ 把下方文字的高度算進去，圖示＋文字整組跟店名、搜尋框對齊 */
 }
 .cart-btn-img:hover, .cart-btn-img:active {
   background: transparent;
@@ -239,7 +244,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 12px 0;
   position: sticky;
-  top: 77px; /* ★ header 變高 12px */
+  top: 79px; /* ★ 跟 header 高度一致 */
   z-index: 90;
   backdrop-filter: blur(8px);
   background: rgba(250, 243, 235, 0.9);
@@ -703,15 +708,18 @@ main {
     transform: translateY(-2px) rotate(8deg);
     position: static !important;
   }
-  .brand-addr { font-size: 9.5px; margin-top: 2px; }
+  .brand-addr { font-size: 9.5px; margin-top: 6px; }
+  .brand { top: 4.5px; }
+  .search-box { top: -6.5px; }
   .search-input { font-size: 13px; padding: 8px 12px 8px 32px; }
   .search-icon { left: 10px; font-size: 12px; }
   /* ★ v2.9.49 手機版 header 壓縮：icon 小一點、間距縮緊，塞得下 5 顆按鈕 */
-  .site-header { padding: calc(10px + var(--safe-top)) 10px 21px; }
+  .site-header { padding: calc(10px + var(--safe-top)) 10px 10px; }
+  .cart-btn-img { margin-bottom: 13px; }
   .cart-btn-label { font-size: 9.5px; letter-spacing: 0; }
   .header-inner { gap: 6px; }
   .cart-btn { width: 32px; height: 32px; font-size: 15px; }
-  .cat-bar-wrap { top: 72px; }
+  .cat-bar-wrap { top: 66px; }
   /* 蝙蝠改到 header 下方漂浮，不蓋到按鈕 */
   #halloweenBats {
     top: 68px !important;
@@ -730,6 +738,7 @@ main {
   .brand-addr { font-size: 9px; }
   .header-inner { gap: 4px; }
   .cart-btn { width: 30px; height: 30px; }
+  .cat-bar-wrap { top: 64px; }
   .search-input { padding: 7px 10px 7px 28px; font-size: 12px; }
 }
 
