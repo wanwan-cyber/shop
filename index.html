@@ -69,7 +69,7 @@ body {
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--border);
-  padding: calc(12px + var(--safe-top)) 16px 12px;
+  padding: calc(12px + var(--safe-top)) 16px 24px; /* ★ 下方多留空間給圖示文字 */
 }
 
 .header-inner {
@@ -175,6 +175,20 @@ body {
   background: transparent;
   transform: scale(1.1);
 }
+/* ★ 圖示下方中文字 */
+.cart-btn-label {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-soft);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+.cart-btn-img:hover .cart-btn-label { transform: translateX(-50%) scale(0.91); } /* 抵銷按鈕放大，字不跟著變大 */
 .cart-btn-icon {
   width: 100%;
   height: 100%;
@@ -223,7 +237,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 12px 0;
   position: sticky;
-  top: 65px;
+  top: 77px; /* ★ header 變高 12px */
   z-index: 90;
   backdrop-filter: blur(8px);
   background: rgba(250, 243, 235, 0.9);
@@ -690,10 +704,11 @@ main {
   .search-input { font-size: 13px; padding: 8px 12px 8px 32px; }
   .search-icon { left: 10px; font-size: 12px; }
   /* ★ v2.9.49 手機版 header 壓縮：icon 小一點、間距縮緊，塞得下 5 顆按鈕 */
-  .site-header { padding: calc(10px + var(--safe-top)) 10px 10px; }
+  .site-header { padding: calc(10px + var(--safe-top)) 10px 21px; }
+  .cart-btn-label { font-size: 9.5px; letter-spacing: 0; }
   .header-inner { gap: 6px; }
   .cart-btn { width: 32px; height: 32px; font-size: 15px; }
-  .cat-bar-wrap { top: 61px; }
+  .cat-bar-wrap { top: 72px; }
   /* 蝙蝠改到 header 下方漂浮，不蓋到按鈕 */
   #halloweenBats {
     top: 68px !important;
@@ -3401,22 +3416,22 @@ body.halloween-mode .product-card:active {
       <input type="text" class="search-input" id="searchInput" placeholder="搜尋商品..." autocomplete="off">
     </div>
     <button class="cart-btn cart-btn-img" onclick="goBodyCheck()" aria-label="身型診斷" title="身型診斷">
-      <img src="./icons/body-check.png" alt="" class="cart-btn-icon">
+      <img src="./icons/body-check.png" alt="" class="cart-btn-icon"><span class="cart-btn-label">身型</span>
     </button>
     <!-- 🎨 色彩心理測驗 (v2.9.48) -->
     <button class="cart-btn cart-btn-img" onclick="goColorTest()" aria-label="色彩心理測驗" title="色彩心理測驗">
-      <img src="./icons/color-test.png" alt="" class="cart-btn-icon">
+      <img src="./icons/color-test.png" alt="" class="cart-btn-icon"><span class="cart-btn-label">色彩</span>
     </button>
     <!-- 👗 搭配小劇場按鈕（開發中隱藏，Wan 自己調整完畢再開放） -->
     <button class="cart-btn cart-btn-img" id="dressupBtn" onclick="goDressup()" aria-label="搭配小劇場" title="搭配小劇場" style="display:none;">
-      <img src="./icons/dressup.png" alt="" class="cart-btn-icon">
+      <img src="./icons/dressup.png" alt="" class="cart-btn-icon"><span class="cart-btn-label">搭配</span>
     </button>
     <button class="cart-btn cart-btn-img" id="myOrdersBtn" onclick="goMyOrders()" aria-label="我的訂單">
-      <img src="./icons/orders.png" alt="" class="cart-btn-icon">
+      <img src="./icons/orders.png" alt="" class="cart-btn-icon"><span class="cart-btn-label">訂單</span>
       <span class="cart-badge" id="myOrdersBadge" data-count="0"></span>
     </button>
     <button class="cart-btn cart-btn-img" onclick="openCart()" aria-label="購物車">
-      <img src="./icons/cart.png" alt="" class="cart-btn-icon">
+      <img src="./icons/cart.png" alt="" class="cart-btn-icon"><span class="cart-btn-label">購物車</span>
       <span class="cart-badge" id="cartBadge" data-count="0"></span>
     </button>
   </div>
