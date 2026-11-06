@@ -100,9 +100,11 @@ body {
 
 .brand-addr {
   font-size: 10.5px;
+  line-height: 1.6; /* ★ 行高加大，避免中文字上緣被裁掉 */
+  padding-top: 1px;
   color: var(--text-mute);
   letter-spacing: 0.3px;
-  margin-top: 3px;
+  margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -508,6 +510,7 @@ main {
   margin-top: 2px;
 }
 
+.pre-off-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #F5E6D6; color: #9A6A3E; font-size: 10px; font-weight: 600; vertical-align: middle; letter-spacing: .5px; font-family: inherit; }
 .card-price .currency { font-size: 11px; margin-right: 1px; opacity: 0.7; }
 
 /* ===== EMPTY STATE ===== */
@@ -3408,8 +3411,9 @@ body.halloween-mode .product-card:active {
 <!-- ===== HEADER ===== -->
 <header class="site-header">
   <div class="header-inner">
-    <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;flex-direction:row;align-items:center;gap:8px;" title="回到首頁">
+    <div class="brand" onclick="clearAllFilters()" style="cursor:pointer;flex-direction:column;align-items:center;gap:0;" title="回到首頁">
       <span class="brand-name">WanWan Selected</span>
+      <span class="brand-addr">新竹湖口・明德街210號</span>
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -4255,6 +4259,22 @@ function isPreorderColor(p, color) {
   if (p.preorder === true) return true;
   return Array.isArray(p.preorderColors) && p.preorderColors.includes(color);
 }
+// ★ 預購優惠：所有預購品（整件 / 預購色 / 預購尺寸）一律現折 $50
+const PREORDER_OFF = 50;
+function preorderPriceOf(p) { return Math.max(0, (p.price || 0) - PREORDER_OFF); }
+function variantPrice(p, color, size) { return isPreorderVariant(p, color, size) ? preorderPriceOf(p) : (p.price || 0); }
+// 價格顯示：整件預購 → 劃線原價＋預購價；部分顏色/尺寸預購 → 原價＋小字提示
+function priceHtml(p, cls) {
+  const orig = (p.price || 0).toLocaleString();
+  if (p.preorder === true) {
+    return `<div class="${cls}"><span style="font-size:.62em;text-decoration:line-through;opacity:.55;margin-right:6px;font-weight:500;">NT$${orig}</span><span class="currency">NT$</span>${preorderPriceOf(p).toLocaleString()}<span class="pre-off-tag">預購價</span></div>`;
+  }
+  if (hasAnyPreorder(p)) {
+    return `<div class="${cls}"><span class="currency">NT$</span>${orig}<span class="pre-off-tag">預購款現折$${PREORDER_OFF}</span></div>`;
+  }
+  return `<div class="${cls}"><span class="currency">NT$</span>${orig}</div>`;
+}
+
 // ★ v2.9.30 helper：此商品的「某色+某尺寸」是否為預購（含上層繼承）
 function isPreorderVariant(p, color, size) {
   if (!p) return false;
@@ -4870,7 +4890,7 @@ function cardHtml(p) {
       <div class="card-body">
         <div class="card-colors">${colorsHtml}</div>
         <div class="card-name">${escapeHtml(p.name || '未命名商品')}</div>
-        <div class="card-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
+        ${priceHtml(p, 'card-price')}
       </div>
     </article>
   `;
@@ -5221,7 +5241,7 @@ function renderDetail() {
       <div class="detail-info">
         ${p.cat ? `<div class="detail-cat">${escapeHtml(p.cat)}</div>` : ''}
         <h1 class="detail-name">${escapeHtml(p.name || '')}${isPreorder ? `<span style="margin-left:8px;vertical-align:middle;display:inline-block;">${preorderBadge({ size: 'md' })}</span>` : ''}</h1>
-        <div class="detail-price"><span class="currency">NT$</span>${(p.price || 0).toLocaleString()}</div>
+        ${priceHtml(p, 'detail-price')}
 
         ${p.link ? `
           <a href="${escapeAttr(p.link)}" target="_blank" rel="noopener"
@@ -5479,7 +5499,7 @@ function openPreorderConfirmModal(p, color, size, qty) {
     document.body.appendChild(overlay);
   }
   const img = (p.images && p.images[0]) || p.image || '';
-  const subtotal = (p.price || 0) * qty;
+  const subtotal = variantPrice(p, color, size) * qty;
   const wholePre = p.preorder === true;
   const colorPre = isPreorderColor(p, color);
   const onlyOneSize = (p.sizes || []).length <= 1;
@@ -5729,7 +5749,8 @@ function addToCart(product, color, size, qty) {
       productId: product.id,
       name: product.name,
       image: (product.images && product.images[0]) || product.image || '',
-      price: product.price || 0,
+      price: variantPrice(product, color, size), // ★ 預購品自動現折 $50
+      origPrice: product.price || 0,
       color,
       size,
       qty: Math.min(stock, qty),
@@ -5847,7 +5868,7 @@ function renderCart() {
       <div class="cart-item-info">
         <div class="cart-item-name">${escapeHtml(item.name)}</div>
         <div class="cart-item-variant">${escapeHtml(item.color)} / ${escapeHtml(item.size)}</div>
-        <div class="cart-item-price">NT$${(item.price * item.qty).toLocaleString()}</div>
+        <div class="cart-item-price">${item.origPrice > item.price ? `<span style="text-decoration:line-through;opacity:.5;font-size:11px;margin-right:4px;">NT$${(item.origPrice * item.qty).toLocaleString()}</span>` : ''}NT$${(item.price * item.qty).toLocaleString()}${item.origPrice > item.price ? `<span class="pre-off-tag">預購價</span>` : ''}</div>
       </div>
       <div class="cart-item-side">
         <button class="cart-item-remove" onclick="removeFromCart('${escapeAttr(item.key)}')" title="移除">✕</button>
