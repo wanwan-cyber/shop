@@ -3397,6 +3397,21 @@ body.halloween-mode .product-card:active {
 }
 .xmas-snowcap { position: absolute; left: 0; right: 0; bottom: -16px; height: 19px; pointer-events: none; z-index: 1; }
 .xmas-snowcap svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1.5px 2px rgba(139, 111, 71, .24)); }
+.xmas-row-tree { display: flex; justify-content: flex-end; align-items: flex-end; gap: 2px; height: 84px; margin: 6px 4px -22px 0; pointer-events: none; }
+.xmas-greeting { margin-right: auto; align-self: flex-start; padding: 10px 0 0 2px; line-height: 1.1; font-family: Georgia, "Times New Roman", serif; }
+.xmas-greeting .big { display: block; font-size: 26px; font-style: italic; color: var(--wood); letter-spacing: .5px; }
+.xmas-greeting .big em { font-style: italic; color: #B8423A; }
+.xmas-greeting .small { display: block; margin-top: 5px; font-size: 11px; letter-spacing: 2.5px; color: #A68968; text-transform: uppercase; }
+.xmas-greeting .small::before { content: "✦ "; color: #D9B45A; }
+@media (max-width: 420px) { .xmas-greeting .big { font-size: 22px; } .xmas-greeting .small { font-size: 9.5px; letter-spacing: 1.8px; } }
+.xmas-row-tree .tree { height: 100%; aspect-ratio: 200 / 270; }
+.xmas-row-tree .gift { width: 22px; height: 20px; margin-bottom: 0; }
+.xmas-row-tree svg { display: block; width: 100%; height: 100%; }
+/* 寬螢幕商品兩側有留白：改用背景大樹；其他尺寸用商品列表上方的樹 */
+@media (min-width: 1400px) { .xmas-row-tree .tree, .xmas-row-tree .gift { display: none; } }
+@media (max-width: 1399px) { #xmasTree { display: none; } }
+#xmasTree { position: fixed; left: -24px; bottom: -6px; height: min(62vh, 520px); aspect-ratio: 200 / 270; pointer-events: none; z-index: -1; opacity: .3; }
+#xmasTree svg { display: block; width: 100%; height: 100%; }
 #xmasSnow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 95; }
 @media (prefers-reduced-motion: reduce) {
   #xmasSnow { display: none; }
@@ -8426,7 +8441,7 @@ function initBodyCheck() {
   })();
 </script>
 
-<!-- 🎄 聖誕裝飾：飄雪 + Header 左右兩端積雪 + 右側小雪人 + 品牌聖誕帽
+<!-- 🎄 聖誕裝飾：飄雪 + Header 左右兩端積雪 + 右側小雪人 + 品牌聖誕帽 + 左下角聖誕樹
      ・XMAS_START ~ XMAS_END 期間自動開啟，過了就自動消失
      ・網址加 ?xmas=1 可強制預覽、?xmas=0 可強制關閉 -->
 <script>
@@ -8489,6 +8504,47 @@ function initBodyCheck() {
     };
     drawGarland();
     var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawGarland, 150); });
+  }
+
+  // ── 背景左下角一棵淡淡的大聖誕樹（在商品後面） ──
+  var tree = document.createElement('div');
+  tree.id = 'xmasTree';
+  tree.setAttribute('aria-hidden', 'true');
+  var TREE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 270">' +
+    '<rect x="88" y="236" width="24" height="34" rx="3" fill="#8B6F47"/>' +
+    '<g fill="#5E8A6C">' +
+      '<path d="M100 22 C112 50 128 70 150 84 C136 86 124 84 114 80 C128 104 148 120 172 132 C152 136 134 134 120 128 C138 156 162 176 192 190 C164 198 136 196 118 188 C132 208 150 222 178 238 C130 246 70 246 22 238 C50 222 68 208 82 188 C64 196 36 198 8 190 C38 176 62 156 80 128 C66 134 48 136 28 132 C52 120 72 104 86 80 C76 84 64 86 50 84 C72 70 88 50 100 22 Z"/>' +
+    '</g>' +
+    '<g fill="none" stroke="#D9B45A" stroke-width="2.4" stroke-linecap="round" opacity=".9">' +
+      '<path d="M66 100 Q100 116 136 98"/><path d="M48 150 Q100 172 154 148"/><path d="M34 206 Q100 232 168 204"/>' +
+    '</g>' +
+    '<g>' +
+      '<circle cx="80" cy="120" r="5" fill="#B8423A"/><circle cx="124" cy="112" r="5" fill="#D9B45A"/>' +
+      '<circle cx="66" cy="168" r="6" fill="#D9B45A"/><circle cx="104" cy="164" r="6" fill="#B8423A"/><circle cx="142" cy="170" r="5" fill="#E8B587"/>' +
+      '<circle cx="54" cy="222" r="6" fill="#B8423A"/><circle cx="96" cy="226" r="6" fill="#E8B587"/><circle cx="142" cy="222" r="6" fill="#D9B45A"/>' +
+    '</g>' +
+    '<path d="M100 2 l5.3 10.8 11.9 1.7 -8.6 8.4 2 11.8 -10.6 -5.6 -10.6 5.6 2 -11.8 -8.6 -8.4 11.9 -1.7 Z" fill="#D9B45A"/>' +
+  '</svg>';
+  tree.innerHTML = TREE_SVG;
+  document.body.appendChild(tree);
+
+  // ── 手機／一般螢幕：商品列表上方右側一棵樹＋兩個小禮物（不會被商品蓋住） ──
+  var count = document.getElementById('resultCount');
+  if (count) {
+    var gift = function (box, ribbon) {
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 20"><rect x="1" y="6" width="20" height="14" rx="2" fill="' + box + '"/>' +
+        '<rect x="0" y="4" width="22" height="5" rx="1.5" fill="' + box + '" stroke="rgba(0,0,0,.08)"/>' +
+        '<rect x="9.5" y="4" width="3" height="16" fill="' + ribbon + '"/>' +
+        '<path d="M11 4 C7 0 4 2 6.5 4 Z M11 4 C15 0 18 2 15.5 4 Z" fill="' + ribbon + '"/></svg>';
+    };
+    var row = document.createElement('div');
+    row.className = 'xmas-row-tree';
+    row.setAttribute('aria-hidden', 'true');
+    row.innerHTML = '<div class="xmas-greeting"><span class="big"><em>Merry</em> Christmas</span><span class="small">Season\'s Greetings</span></div>' +
+      '<div class="gift">' + gift('#B8423A', '#F4D58D') + '</div>' +
+      '<div class="tree">' + TREE_SVG + '</div>' +
+      '<div class="gift" style="width:18px;height:16px">' + gift('#E8B587', '#B8423A') + '</div>';
+    count.parentNode.insertBefore(row, count);
   }
 
   // ── 飄雪（不擋點擊；減少動態偏好時不顯示） ──
