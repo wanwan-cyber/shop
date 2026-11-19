@@ -3384,6 +3384,26 @@ body.halloween-mode .product-card:active {
   .d11-title { font-size: 36px; }
   .d11::after { font-size: 170px; bottom: -46px; }
 }
+
+/* ===== 🎄 聖誕裝飾（html 有 .xmas 才生效；日期與開關見頁尾 XMAS 設定） ===== */
+:root { --xmas-red: #B8423A; --xmas-green: #3E6B4F; --xmas-gold: #D9B45A; }
+.xmas .brand-name { position: relative; }
+.xmas .brand-name::after {
+  content: ""; position: absolute; left: -9px; top: -6px; width: 11px; height: 11px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z' fill='%23C9A84C'/%3E%3C/svg%3E") no-repeat center / contain;
+  animation: xmasStar 3.2s ease-in-out infinite;
+}
+@keyframes xmasStar { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.8); } }
+.xmas-garland { position: absolute; left: 0; right: 0; bottom: -8px; height: 11px; pointer-events: none; overflow: visible; z-index: 1; }
+.xmas-garland svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.xmas-garland .wire { fill: none; stroke: var(--gold); stroke-width: 1; opacity: .75; }
+.xmas-garland .bulb { animation: xmasTwinkle 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes xmasTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+#xmasSnow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 95; }
+@media (prefers-reduced-motion: reduce) {
+  .xmas-garland .bulb, .xmas .brand-name::after { animation: none; }
+  #xmasSnow { display: none; }
+}
 </style>
 <!-- 店家資料：給 Google / AI 讀的結構化標記 -->
 <script type="application/ld+json">
@@ -8407,6 +8427,87 @@ function initBodyCheck() {
     window.addEventListener('scroll', updateBtnVisibility, { passive: true });
     updateBtnVisibility();
   })();
+</script>
+
+<!-- 🎄 聖誕裝飾：飄雪 + 頂部金色小燈串 + 品牌小金星
+     ・XMAS_START ~ XMAS_END 期間自動開啟，過了就自動消失
+     ・網址加 ?xmas=1 可強制預覽、?xmas=0 可強制關閉 -->
+<script>
+(function () {
+  var XMAS_START = '11-19', XMAS_END = '12-31';
+  var q = new URLSearchParams(location.search).get('xmas');
+  var d = new Date();
+  var md = String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  var on = q === '1' ? true : q === '0' ? false : (md >= XMAS_START && md <= XMAS_END);
+  if (!on) return;
+  document.documentElement.classList.add('xmas');
+
+  // ── 頂部燈串 ──
+  var header = document.querySelector('.site-header');
+  if (header) {
+    var NS = 'http://www.w3.org/2000/svg';
+    var wrap = document.createElement('div');
+    wrap.className = 'xmas-garland';
+    wrap.setAttribute('aria-hidden', 'true');
+    header.appendChild(wrap);
+    var drawGarland = function () {
+      var w = header.clientWidth, n = Math.max(2, Math.round(w / (w < 500 ? 46 : 64)));
+      var step = w / n, path = 'M0 0', dots = '';
+      for (var i = 0; i < n; i++) {
+        var x0 = i * step, mx = x0 + step / 2;
+        path += ' Q' + mx + ' 9 ' + (x0 + step) + ' 0';
+        var delay = ((i * 0.53) % 3.6).toFixed(2);
+        dots += '<circle class="bulb" cx="' + mx + '" cy="4.6" r="2.7" fill="#E9BE5C" style="animation-delay:' + delay + 's;filter:drop-shadow(0 0 4px rgba(236,184,80,.95))"/>';
+      }
+      wrap.innerHTML = '<svg xmlns="' + NS + '" viewBox="0 0 ' + w + ' 10" preserveAspectRatio="none"><path class="wire" d="' + path + '"/>' + dots + '</svg>';
+    };
+    drawGarland();
+    var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawGarland, 150); });
+  }
+
+  // ── 飄雪（不擋點擊；減少動態偏好時不顯示） ──
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var cv = document.createElement('canvas');
+  cv.id = 'xmasSnow';
+  cv.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(cv);
+  var ctx = cv.getContext('2d'), flakes = [], W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var target = Math.min(45, Math.round(W * H / 22000));
+    while (flakes.length < target) flakes.push(make(true));
+    flakes.length = target;
+  }
+  function make(anyY) {
+    return { x: Math.random() * W, y: anyY ? Math.random() * H : -6,
+             r: 1.2 + Math.random() * 2, s: 0.3 + Math.random() * 0.8,
+             a: Math.random() * Math.PI * 2, o: 0.6 + Math.random() * 0.35 };
+  }
+  var raf = 0, last = 0;
+  function tick(t) {
+    var dt = Math.min(50, t - (last || t)) / 16.7; last = t;
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < flakes.length; i++) {
+      var f = flakes[i];
+      f.a += 0.01 * dt; f.y += f.s * dt; f.x += Math.sin(f.a) * 0.35 * dt;
+      if (f.y > H + 6) { flakes[i] = make(false); continue; }
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + f.o + ')';
+      ctx.shadowColor = 'rgba(166,137,104,.45)'; ctx.shadowBlur = 2.5;
+      ctx.fill();
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function () {
+    cancelAnimationFrame(raf); last = 0;
+    if (!document.hidden) raf = requestAnimationFrame(tick);
+  });
+  raf = requestAnimationFrame(tick);
+})();
 </script>
 </body>
 </html>
