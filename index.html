@@ -3446,6 +3446,36 @@ body.halloween-mode .product-card:active {
   "sameAs": ["https://www.instagram.com/wanwanselected"]
 }
 </script>
+<!-- 📈 Google Analytics 流量統計
+     ・把下面 GA_ID 換成你的「評估 ID」（G- 開頭）才會開始記錄；空白時完全不載入
+     ・只送商品／金額等購物資料，不送姓名、電話、地址等個資 -->
+<script>
+  window.GA_ID = 'G-XQPQ0YGS1V';
+  window.gaEvent = function () {};
+  // 本機預覽（localhost）不記錄，避免污染數據
+  if (window.GA_ID && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + window.GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', window.GA_ID, { send_page_view: false });
+    window.gaEvent = function (name, params) { try { gtag('event', name, params || {}); } catch (e) {} };
+    // 網址 # 後面換頁（商品頁、購物車、結帳…）也算一次瀏覽
+    var sendPage = function () {
+      window.gaEvent('page_view', { page_location: location.href, page_path: location.pathname + location.hash, page_title: document.title });
+    };
+    window.addEventListener('hashchange', function () { setTimeout(sendPage, 50); });
+    window.addEventListener('DOMContentLoaded', sendPage);
+  }
+  window.gaItem = function (p, extra) {
+    var it = { item_id: p.productId || p.id, item_name: p.name, item_category: p.cat || '', price: p.price || 0 };
+    for (var k in (extra || {})) it[k] = extra[k];
+    return it;
+  };
+</script>
 </head>
 <body>
 
@@ -4998,6 +5028,8 @@ function closeCart() {
 
 function goCheckout() {
   if (cart.length === 0) { toast('購物車還是空的喔'); return; }
+  gaEvent('begin_checkout', { currency: 'TWD', value: getCartTotal(),
+    items: cart.map(i => gaItem(i, { quantity: i.qty, item_variant: i.color + ' / ' + i.size })) });
   location.hash = '#/checkout';
 }
 
@@ -5190,6 +5222,7 @@ function showDetail(product) {
 
   // 📊 通知後端 +1 觀看數（只給 POS 看，客人自己看不到）
   trackProductView(product.id);
+  gaEvent('view_item', { currency: 'TWD', value: product.price || 0, items: [gaItem(product)] });
 
   // 有貨的顏色（自動隱藏售完顏色）
   const availableColors = getAvailableColors(product);
@@ -5797,6 +5830,8 @@ function addToCart(product, color, size, qty) {
       qty: Math.min(stock, qty),
     });
   }
+  gaEvent('add_to_cart', { currency: 'TWD', value: variantPrice(product, color, size) * qty,
+    items: [gaItem(product, { price: variantPrice(product, color, size), quantity: qty, item_variant: color + ' / ' + size })] });
   saveCart();
   toast(`「${product.name}」已加入購物車 🛒`);
   openCart();
@@ -6223,6 +6258,8 @@ async function submitOrder() {
 
     // 成功
     lastOrder = { ...order, orderNo: data.orderNo };
+    gaEvent('purchase', { transaction_id: data.orderNo, currency: 'TWD', value: order.total, shipping: order.shippingFee,
+      items: order.items.map(i => gaItem(i, { quantity: i.qty, item_variant: i.color + ' / ' + i.size })) });
     saveOrderLocal(lastOrder); // ★ 存本地，之後可回來看
     saveMyPhone(order.phone); // ★ 自動記住電話（識別碼）
     updateMyOrdersBadge(); // ★ 更新 Header 訂單徽章
@@ -7012,6 +7049,12 @@ function toast(msg) {
 
 // 搜尋（防抖）
 let searchTimer = null;
+let gaSearchTimer;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(gaSearchTimer);
+  const term = e.target.value.trim();
+  if (term) gaSearchTimer = setTimeout(() => gaEvent('search', { search_term: term }), 1000);
+});
 document.getElementById('searchInput').addEventListener('input', e => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
