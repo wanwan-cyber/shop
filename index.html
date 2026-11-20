@@ -3461,14 +3461,9 @@ body.halloween-mode .product-card:active {
     window.dataLayer = window.dataLayer || [];
     window.gtag = function () { dataLayer.push(arguments); };
     gtag('js', new Date());
-    gtag('config', window.GA_ID, { send_page_view: false });
+    // 頁面瀏覽交給 GA 自動記錄（加強型評估會自動算 # 換頁），這裡只補購物事件，避免重複計算
+    gtag('config', window.GA_ID);
     window.gaEvent = function (name, params) { try { gtag('event', name, params || {}); } catch (e) {} };
-    // 網址 # 後面換頁（商品頁、購物車、結帳…）也算一次瀏覽
-    var sendPage = function () {
-      window.gaEvent('page_view', { page_location: location.href, page_path: location.pathname + location.hash, page_title: document.title });
-    };
-    window.addEventListener('hashchange', function () { setTimeout(sendPage, 50); });
-    window.addEventListener('DOMContentLoaded', sendPage);
   }
   window.gaItem = function (p, extra) {
     var it = { item_id: p.productId || p.id, item_name: p.name, item_category: p.cat || '', price: p.price || 0 };
