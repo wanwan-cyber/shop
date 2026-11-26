@@ -4158,6 +4158,9 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   }
 }
 
+const PRODUCTS_CACHE_KEY = 'shop_products_cache_v1';
+const PRODUCTS_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+
 async function loadProducts() {
   if (!APPS_SCRIPT_URL) {
     // 還沒接 Apps Script
@@ -4168,18 +4171,33 @@ async function loadProducts() {
     render();
     return;
   }
+  // ⚡ 熟客秒開：先顯示手機上記住的上次商品清單（24 小時內），背景再換成最新
+  let cachedJson = '';
+  try {
+    const c = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || 'null');
+    if (c && Array.isArray(c.products) && c.products.length && Date.now() - c.savedAt < PRODUCTS_CACHE_MAX_AGE) {
+      cachedJson = JSON.stringify(c.products);
+      allProducts = c.products;
+      window._productsLoadedOnce = true;
+      render();
+    }
+  } catch (e) {}
   try {
     const res = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=${APPS_SCRIPT_ACTION}`);
     const data = await res.json();
     if (data && data.ok && Array.isArray(data.products)) {
+      const freshJson = JSON.stringify(data.products);
+      try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), products: data.products })); } catch (e) {}
+      document.getElementById('demoBanner').style.display = 'none';
+      if (freshJson === cachedJson) return; // 跟記住的一樣，不用重畫
       allProducts = data.products;
       window._productsLoadedOnce = true; // ★ v2.9.38
-      document.getElementById('demoBanner').style.display = 'none';
       render();
     } else {
       throw new Error('回應格式錯誤');
     }
   } catch (err) {
+    if (cachedJson) { console.warn('更新商品失敗，先沿用上次的清單', err); return; }
     console.warn('無法載入商品，改用 mock 資料', err);
     allProducts = MOCK_PRODUCTS;
     window._productsLoadedOnce = true; // ★ v2.9.38
