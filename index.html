@@ -281,6 +281,14 @@ body {
 
 .cat-chip:hover { border-color: var(--apricot); color: var(--wood); }
 
+/* ===== 季節切換（全部｜秋冬｜春夏）===== */
+.season-bar { display: flex; justify-content: center; margin: 0 auto 8px; }
+.season-seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--cream-3); border: 1px solid var(--border); border-radius: 20px; }
+.season-btn { border: none; background: transparent; color: var(--text-soft); font: inherit; font-size: 12.5px; font-weight: 500;
+  padding: 5px 16px; border-radius: 16px; cursor: pointer; white-space: nowrap; transition: all .2s; }
+.season-btn:hover { color: var(--wood); }
+.season-btn.active { background: var(--apricot-soft); color: var(--wood); font-weight: 700; box-shadow: 0 1px 3px rgba(139,111,71,.15); }
+
 .cat-chip.active {
   background: var(--wood);
   color: var(--cream);
@@ -3538,6 +3546,7 @@ body.halloween-mode .product-card:active {
 
 <!-- ===== CATEGORY BAR ===== -->
 <div class="cat-bar-wrap">
+  <div class="season-bar" id="seasonBar"></div>
   <div class="cat-bar" id="catBar">
     <!-- 由 JS 動態產生 -->
   </div>
@@ -3774,6 +3783,52 @@ const MOCK_PRODUCTS = [
 // ============================================================
 let allProducts = [];
 let currentCat = '全部';
+let currentSeason = '全部';
+
+// 🍂 季節分類：POS 標籤優先（秋冬／春夏／夏季／四季），沒標的依商品名稱自動猜，猜不到算四季（兩邊都會出現）
+const SEASON_TAGS = { '秋冬': 'winter', '冬季': 'winter', '春夏': 'summer', '夏季': 'summer', '夏天': 'summer', '四季': 'all' };
+const SEASON_STRONG_SUMMER = ['涼感', '冰絲', '透膚', '微透', '短袖', '細肩', '小可愛', '短褲', '掛脖'];
+const SEASON_WINTER = ['針織', '毛呢', '羊羔', '鋪棉', '絨', '毛領', '風衣', '外套', '長袖', '衝鋒', '高領', '中領', '厚磅', '麂皮', '開衫', '打底', '坑紋', '西料'];
+const SEASON_WEAK_SUMMER = ['背心', 'Tee', 'TEE', 'Ｔ', '大T', '一字', '平口', '露肩', '紗', '棉麻', '荷葉'];
+// 🍂 老闆 2026-11-26 親自勾選的季節（POS 標籤 > 這份清單 > 名稱自動判斷）
+const SEASON_OVERRIDES = {};
+["id17835013586951apw", "id1788676238392hu34", "id17909126284515irq", "id1791972249363e0ob", "id1791974668701k07d", "id17931036109114od9", "id1793175862646t48m", "id1793175991891hm1n", "id1793176184635g0td", "id1793942642437wta6", "id17954245014826fzt", "id1795672476635r1ky", "id1782206604808kp8u", "id1788680464978b7j5", "id1789708736548kuln", "id17909120422974nsr", "id1791966101358yuf1", "id1792125372639vjpe", "id1792651343796zdd9", "id179310361091138er", "id17931757338447p51", "id1793176184635w9ww", "id1793176184635odvq", "id1794822107763mux7", "id1782186076208lbym", "id1788671514755megp", "id1789042784229o8x9", "id17909126284517suj", "id1790912628451ymxz", "id17931036109119d3v", "id179317573384465pj", "id179317586264644u6", "id1782190551795a05i", "id1790912042297nnfv", "id1790912628451pfzt", "id17886761882814w2s"].forEach(id => SEASON_OVERRIDES[id] = 'winter');
+["id17822064528785p0z", "id17822071749580ech", "id178220729303770au", "id17822073755758svr", "id178220744762146dg", "id1782207507036ipf1", "id1782207776248kt6v", "id1782207843878bpkp", "id17822079271378kaq", "id1783488846735b435", "id1783494401493tz8c", "id1783494750858j9eu", "id1783501358694t02e", "id1786879978734oubf", "id1788676907366bbyl", "id1789709329749954b", "id1789709439866q73k", "id179091262845147nt", "id17821812471098v4h", "id1782182473209e180", "id1782182668810e7ju", "id1782184806699bu48", "id17822069967060yu1", "id178218292712213f5", "id1782186459591rqx7", "id1782187887652m3fh", "id1782188078739o89h", "id1782204143959cn80", "id17834981613743sj0", "id17822022330051kvq"].forEach(id => SEASON_OVERRIDES[id] = 'summer');
+["id1793175733844kz80", "id1785318889240qp6s", "id1791975179387fhvt", "id1782201316600afm8", "id1782201700495731r", "id1782201985429fqcx", "id1787206389451xyxx", "id17822005431778w1j", "id17822026157170j9e", "id1782202929882ooyk", "id1782203306403bgfo", "id17834999268602861", "id1793103610911iq1o", "id1782203724923bmlk", "id17822052136788s9r", "id1782205524953o1bw", "id17834973438112xdu", "id17835006390129708", "id1788680785138apo1", "id17897090628091f53", "id1789710438957x007", "id17898947307034kn0", "id1790912042297ctci", "id1790912042297ujuw", "id17931757338448vky", "id1793175991891zmn3", "id1786518238071kmfm", "id1786870915479w8vp", "id1786870990962q2ur", "id1788677553108nbot", "id1788679420587b8f9", "id1788679833996pau4", "id1789718769316q77p", "id17913577957749yad", "id17913580544114lf6", "id1791958093310l4tj", "id1791961601634qol7", "id1793096212401x0rp", "id1793174997205qwo1"].forEach(id => SEASON_OVERRIDES[id] = 'all');
+function productSeason(p) {
+  if (p.cat === '配件') return 'all'; // 配件不分季節，秋冬／春夏都照常顯示
+  const tags = Array.isArray(p.tags) ? p.tags : [];
+  for (const t of tags) if (SEASON_TAGS[t]) return SEASON_TAGS[t];
+  if (SEASON_OVERRIDES[p.id]) return SEASON_OVERRIDES[p.id];
+  const name = p.name || '';
+  const n = name + ' ' + (p.cat || '');
+  if (SEASON_STRONG_SUMMER.some(k => n.includes(k))) return 'summer';
+  if (SEASON_WINTER.some(k => name.includes(k))) return 'winter'; // 只看名稱，避免「襯衫｜外套」分類全被當秋冬
+  if (SEASON_WEAK_SUMMER.some(k => n.includes(k)) || /[^A-Za-z]T\b|Ｔ/.test(n)) return 'summer';
+  return 'all';
+}
+function matchSeason(p) {
+  if (currentSeason === '全部') return true;
+  const s = productSeason(p);
+  return s === 'all' || s === (currentSeason === '秋冬' ? 'winter' : 'summer');
+}
+function visibleTags(tags) { return Array.isArray(tags) ? tags.filter(t => !SEASON_TAGS[t]) : tags; }
+function renderSeasonBar() {
+  const bar = document.getElementById('seasonBar');
+  if (!bar) return;
+  const opts = [['全部', '全部'], ['秋冬', '🍂 秋冬'], ['春夏', '🌼 春夏']];
+  bar.innerHTML = `<div class="season-seg" role="tablist">${opts.map(([v, l]) =>
+    `<button class="season-btn ${v === currentSeason ? 'active' : ''}" role="tab" aria-selected="${v === currentSeason}" onclick="setSeason('${v}')">${l}</button>`).join('')}</div>`;
+}
+function setSeason(season) {
+  currentSeason = season;
+  renderSeasonBar();
+  if (typeof gtag === 'function') { try { gtag('event', 'select_season', { season: season }); } catch (e) {} }
+  // 切季節後，原本選的分類若沒有商品 → 回到全部
+  renderCatBar();
+  if (!document.querySelector('.cat-chip.active')) currentCat = '全部';
+  setCat(currentCat);
+}
 let currentSearch = '';
 let cart = []; // { key, productId, name, image, price, color, size, qty }
 let currentProduct = null; // 詳情頁當前商品
@@ -4386,6 +4441,8 @@ function getFilteredProducts() {
   // ★ v2.9.10 完全隱藏售完商品（庫存 = 0 且非預購 → 客人根本不會看到）
   // ★ v2.9.29 一併放行「有單色預購」的商品
   list = list.filter(p => hasAnyPreorder(p) || (p.stock || 0) > 0);
+  // 🍂 季節
+  list = list.filter(matchSeason);
   // 🎀 預購 tab：只顯示預購品；其他 tab：排除「整個預購」品（含單色預購仍可照常分類中顯示）
   if (currentCat === '預購') {
     list = list.filter(p => p.preorder === true);
@@ -4456,6 +4513,7 @@ function tagColor(name) { return SHOP_TAG_COLORS[name] || '#8B6F47'; }
 
 // 商品卡的標籤 badges（右上、垂直堆疊、最多顯示 3 個）
 function renderCardTags(tags) {
+  tags = visibleTags(tags);
   if (!Array.isArray(tags) || !tags.length) return '';
   const show = tags.slice(0, 3);
   return `<div style="position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:2;">
@@ -4465,6 +4523,7 @@ function renderCardTags(tags) {
 
 // 詳情頁的標籤（大顆一點、水平排）
 function renderDetailTags(tags) {
+  tags = visibleTags(tags);
   if (!Array.isArray(tags) || !tags.length) return '';
   return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;">
     ${tags.map(t => `<span style="display:inline-flex;align-items:center;padding:4px 10px;background:${tagColor(t)};color:#fff;border-radius:12px;font-size:12px;font-weight:700;">${escapeHtml(t)}</span>`).join('')}
@@ -4837,7 +4896,8 @@ function preorderBadge(opts = {}) {
 function renderCatBar() {
   // ★ v2.9.10 只算「上架 且 有貨/預購」的商品 — 避免空分類 chip 出現
   // ★ v2.9.29 一併放行有單色預購的商品
-  const onShelf = allProducts.filter(p => p.onlineShop && (hasAnyPreorder(p) || (p.stock || 0) > 0));
+  const onShelf = allProducts.filter(p => p.onlineShop && (hasAnyPreorder(p) || (p.stock || 0) > 0) && matchSeason(p));
+  renderSeasonBar();
   const hasPreorder = onShelf.some(p => p.preorder === true);
   const cats = ['全部'];
   if (hasPreorder) cats.push('預購'); // 內部識別符，chip 顯示會加緞帶 icon
