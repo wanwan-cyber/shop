@@ -4375,7 +4375,7 @@ function getFilteredProducts() {
     const q = currentSearch.toLowerCase();
     list = list.filter(p => (p.name || '').toLowerCase().includes(q));
   }
-  // 排序：售完最後、強推最前、7 天內新品次之、其他按價格
+  // 排序：售完最後、強推最前、瀏覽數高的次之、7 天內新品、其他按價格
   const NEW_DAYS = 7;
   const newCutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
   list.sort((a, b) => {
@@ -4394,6 +4394,10 @@ function getFilteredProducts() {
         const bOrd = b.featuredOrder ?? Infinity;
         if (aOrd !== bOrd) return aOrd - bOrd;
       }
+      // 👁 瀏覽數高的在前（Apps Script 的 getShopProducts 有帶 views 才會生效）
+      const aViews = Number(a.views) || 0;
+      const bViews = Number(b.views) || 0;
+      if (aViews !== bViews) return bViews - aViews;
       // 都是強推 or 都不是強推 → 檢查新品
       const aNew = (a.createdAt || 0) >= newCutoff ? 1 : 0;
       const bNew = (b.createdAt || 0) >= newCutoff ? 1 : 0;
