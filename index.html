@@ -4486,6 +4486,10 @@ function getFilteredProducts() {
   // 排序：售完最後、強推最前、瀏覽數高的次之、7 天內新品、其他按價格
   const NEW_DAYS = 7;
   const newCutoff = Date.now() - NEW_DAYS * 24 * 60 * 60 * 1000;
+  // 🎀 預購分頁：最新上架的在前（一樣新就便宜的在前）
+  if (currentCat === '預購') {
+    return list.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0) || (a.price || 0) - (b.price || 0));
+  }
   list.sort((a, b) => {
     // 預購品（整張或單色）當作永遠有貨
     const aOut = (hasAnyPreorder(a) ? false : (a.stock || 0) <= 0) ? 1 : 0;
