@@ -622,6 +622,32 @@ main {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ===== 開場載入動畫（禮物盒 + 雪花）===== */
+.wan-loader { padding: 46px 20px 40px; text-align: center; }
+.wan-loader .hanger { width: 92px; height: 104px; margin: 0 auto; display: block;
+  transform-origin: 50% 6%; animation: wanSwing 1.6s ease-in-out infinite; }
+.wan-loader .paws { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+.wan-loader .paw { width: 18px; height: 18px; color: #9FBFD6; opacity: 0;
+  animation: wanPaw 1.8s ease-in-out infinite; }
+.wan-loader .paw:nth-child(2) { animation-delay: .3s; transform: translateY(-4px); }
+.wan-loader .paw:nth-child(3) { animation-delay: .6s; }
+.wan-loader .msg { margin-top: 14px; color: var(--wood); font-size: 14px; font-weight: 600; letter-spacing: 1px; }
+.wan-loader .sub { margin-top: 4px; color: var(--text-mute); font-size: 12px; }
+.wan-loader .gift { width: 110px; height: 110px; animation: none; }
+.wan-loader .gift .gift-box { transform-origin: 60px 106px; animation: giftHop 1.4s ease-in-out infinite; }
+.wan-loader .gift .gift-lid { transform-origin: 60px 60px; animation: giftLid 1.4s ease-in-out infinite; }
+.wan-loader .gift .gift-shadow { transform-origin: 60px 110px; animation: giftShadow 1.4s ease-in-out infinite; }
+.wan-loader .gift .gift-spark { animation: giftSpark 1.4s ease-in-out infinite; }
+@keyframes giftHop { 0%,100% { transform: translateY(0) scale(1.04,.96); } 15% { transform: translateY(0) scale(1); } 45% { transform: translateY(-10px) rotate(-4deg); } 60% { transform: translateY(-10px) rotate(4deg); } 85% { transform: translateY(0) scale(1); } }
+@keyframes giftLid { 0%,30%,80%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-7px) rotate(-6deg); } }
+@keyframes giftShadow { 0%,100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.75); opacity: .6; } }
+@keyframes giftSpark { 0%,30%,100% { opacity: 0; } 50%,65% { opacity: 1; } }
+@keyframes wanSwing { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@keyframes wanPaw { 0% { opacity: 0; scale: .6; } 25%,60% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; } }
+@media (prefers-reduced-motion: reduce) {
+  .wan-loader .hanger, .wan-loader .paw, .wan-loader .gift * { animation: none !important; opacity: 1; }
+}
+
 /* ===== SKELETON LOADER（首屏骨架）===== */
 .skeleton-grid {
   display: grid;
@@ -4862,12 +4888,27 @@ function renderProducts() {
   // ★ v2.9.38 商品還沒載入完 → 顯示 loading 畫面而非「找不到商品」
   if (!window._productsLoadedOnce && allProducts.length === 0) {
     count.innerHTML = '';
-    const indicator = `<div style="width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--apricot-deep);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;"></div>`;
     area.innerHTML = `
-      <div class="empty-state" style="padding:50px 20px;text-align:center;">
-        ${indicator}
-        <h3 style="color:var(--text-mute);margin-top:16px;font-weight:600;">商品載入中...</h3>
-        <p style="color:var(--text-mute);font-size:12px;">請稍等</p>
+      <div class="wan-loader" role="status" aria-live="polite">
+        <svg class="hanger santa gift" viewBox="0 0 120 120" aria-hidden="true">
+          <ellipse class="gift-shadow" cx="60" cy="110" rx="30" ry="4" fill="#EADCCB"/>
+          <g class="gift-box">
+            <rect x="30" y="58" width="60" height="48" rx="6" fill="#F2D5B5" stroke="#D49768" stroke-width="2.2"/>
+            <rect x="55" y="58" width="10" height="48" fill="#D9706A"/>
+            <circle cx="40" cy="72" r="2" fill="#FFFFFF"/><circle cx="80" cy="68" r="2" fill="#FFFFFF"/><circle cx="44" cy="94" r="1.8" fill="#FFFFFF"/><circle cx="78" cy="92" r="2" fill="#FFFFFF"/>
+            <g class="gift-lid">
+              <rect x="25" y="46" width="70" height="15" rx="5" fill="#E8B587" stroke="#D49768" stroke-width="2.2"/>
+              <rect x="55" y="46" width="10" height="15" fill="#D9706A"/>
+              <path d="M60 46 C48 28 32 32 38 42 C42 48 54 47 60 46 Z M60 46 C72 28 88 32 82 42 C78 48 66 47 60 46 Z" fill="#D9706A" stroke="#C25E58" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M58 47 q-6 8 -10 12 M62 47 q6 8 10 12" fill="none" stroke="#C25E58" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="60" cy="45" r="4.5" fill="#C25E58"/>
+            </g>
+          </g>
+          <g class="gift-spark" fill="#E8B587"><path d="M18 40 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/><path d="M100 30 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 Z"/><path d="M98 64 l1.2 3 3 1.2 -3 1.2 -1.2 3 -1.2 -3 -3 -1.2 3 -1.2 Z"/></g>
+        </svg>
+        <div class="paws"><svg class="paw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9.5 3.8L12 6l2.5-2.2M9.5 20.2L12 18l2.5 2.2M3.6 10.3L6.8 9.6 5.9 6.4M20.4 13.7l-3.2.7.9 3.2M3.6 13.7l3.2.7-.9 3.2M20.4 10.3l-3.2-.7.9-3.2"/></svg><svg class="paw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9.5 3.8L12 6l2.5-2.2M9.5 20.2L12 18l2.5 2.2M3.6 10.3L6.8 9.6 5.9 6.4M20.4 13.7l-3.2.7.9 3.2M3.6 13.7l3.2.7-.9 3.2M20.4 10.3l-3.2-.7.9-3.2"/></svg><svg class="paw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9.5 3.8L12 6l2.5-2.2M9.5 20.2L12 18l2.5 2.2M3.6 10.3L6.8 9.6 5.9 6.4M20.4 13.7l-3.2.7.9 3.2M3.6 13.7l3.2.7-.9 3.2M20.4 10.3l-3.2-.7.9-3.2"/></svg></div>
+        <div class="msg">Welcome to WanWan ♡</div>
+        <div class="sub">把喜歡的日常，穿成自己的樣子</div>
       </div>`;
     return;
   }
