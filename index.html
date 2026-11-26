@@ -1853,6 +1853,9 @@ main {
   border-radius: 6px;
 }
 .qr-label { font-size: 11px; color: var(--text-mute); margin-top: 8px; letter-spacing: 1px; }
+.cart-changed-notice { background: #FFF4E6; border: 1.5px solid var(--apricot-deep, #D49768); border-radius: 14px; padding: 12px 16px; margin: 12px 16px 4px; }
+.cart-changed-notice .ccn-title { font-size: 14px; font-weight: 700; color: #8A4B3A; margin-bottom: 6px; }
+.cart-changed-notice .ccn-line { font-size: 13px; color: var(--wood, #6B5440); line-height: 1.7; }
 
 .pay-steps {
   background: var(--cream-3);
@@ -6358,6 +6361,12 @@ async function submitOrder() {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     });
     const data = await res.json();
+    // ★ 伺服器核對發現價格／庫存已變 → 更新購物車，請客人確認後再送
+    if (data && data.code === 'CART_CHANGED' && Array.isArray(data.problems)) {
+      hideLoading();
+      applyCartChanges(data.problems);
+      return;
+    }
     if (!data || !data.ok) throw new Error(data.error || '送單失敗');
 
     // 成功
@@ -6376,6 +6385,52 @@ async function submitOrder() {
     console.error(err);
     toast('送單失敗：' + (err.message || '未知錯誤') + '，請稍後再試或聯絡 LINE 客服');
   }
+}
+
+// ★ 送單時伺服器回報購物車有變動：改價、減量或移除，並在結帳頁上方列出給客人看
+function applyCartChanges(problems) {
+  const lines = [];
+  problems.forEach(pb => {
+    const key = `${pb.productId}|${pb.color}|${pb.size}`;
+    const item = cart.find(i => i.key === key);
+    if (!item) return;
+    const label = `「${item.name}」${[item.color, item.size].filter(Boolean).join(' / ')}`;
+    if (pb.reason === 'price') {
+      lines.push(`${label} 價格已更新：NT$${(item.price || 0).toLocaleString()} → NT$${(pb.price || 0).toLocaleString()}`);
+      item.price = pb.price;
+    } else if (pb.reason === 'stock') {
+      lines.push(`${label} 只剩 ${pb.available} 件，數量已調整`);
+      item.qty = pb.available;
+    } else if (pb.reason === 'qty') {
+      lines.push(`${label} 數量有誤，已從購物車移除`);
+      item.qty = 0;
+    } else {
+      lines.push(`${label} 已售完，已從購物車移除`);
+      item.qty = 0;
+    }
+  });
+  cart = cart.filter(i => i.qty > 0);
+  saveCart();
+  gaEvent('cart_changed_at_checkout', { count: problems.length });
+  if (typeof loadProducts === 'function') loadProducts(); // 順便更新商品清單
+  if (cart.length === 0) {
+    toast('購物車裡的商品都已售完，看看其他款吧');
+    location.hash = '';
+    return;
+  }
+  const el = document.getElementById('checkoutPage');
+  // 重畫結帳頁前先記住客人已填的資料，畫完再填回去
+  const filled = {};
+  el.querySelectorAll('input[id], select[id], textarea[id]').forEach(f => { filled[f.id] = f.value; });
+  renderCheckout();
+  Object.keys(filled).forEach(id => { const f = document.getElementById(id); if (f && filled[id]) f.value = filled[id]; });
+  const box = document.createElement('div');
+  box.className = 'cart-changed-notice';
+  box.setAttribute('role', 'alert');
+  box.innerHTML = `<div class="ccn-title">購物車有更新，請確認後再送出</div>` +
+    lines.map(l => `<div class="ccn-line">• ${escapeHtml(l)}</div>`).join('');
+  el.insertBefore(box, el.firstChild);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showLoading(text) {
